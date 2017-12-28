@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "218789890943",
+    "firebase_url": "https://busapplication-9c6e4.firebaseio.com",
+    "project_id": "busapplication-9c6e4",
+    "storage_bucket": "busapplication-9c6e4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:218789890943:android:190b86f256c0a5b8",
+        "android_client_info": {
+          "package_name": "vkalashnykov.org.busapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "218789890943-jl0utdp2dcshcg11sts186sskidn69ef.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "vkalashnykov.org.busapplication",
+            "certificate_hash": "880c9c0fbd71a5af4ccf1516b3a2f3e5cb6889fe"
+          }
+        },
+        {
+          "client_id": "218789890943-grcccgesl3jvqoeh3hvgf9u2n38dk2k6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdH5TybiNuObQsCdifq4S0YADjZb5s56M"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "218789890943-grcccgesl3jvqoeh3hvgf9u2n38dk2k6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

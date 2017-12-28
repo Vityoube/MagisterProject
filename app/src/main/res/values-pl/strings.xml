@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aplikacja Bus</string>
+    <string name="welcome">Zapraszamy</string>
+
+    <string name="email">Email</string>
+    <string name="password">Hasło</string>
+    <string name="login">Załoguj</string>
+    <string name="no_account">Nie masz konta?</string>
+    <string name="sign_up">Zarejestruj</string>
+    <string name="user_exists">Uzytkownik z takim loginem już istnieje</string>
+
+    <string name="sign_up_success">Zarejestrowałeś się pomyślnie</string>
+    <string name="auth_failed">Błędny użytkownik lub hasło</string>
+    <string name="auth_success">Zalogowałeś się pomyślnie</string>
+    <string name="sign_out">Wyloguj</string>
+    <string name="logout_success">Wylogowałeś się pomyślnie</string>
+    <string name="mapChange" >Zmiana trasy</string>
+
+</resources>

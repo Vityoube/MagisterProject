@@ -2,12 +2,11 @@
     <string name="app_name">Bus Application</string>
     <string name="welcome">Welcome</string>
 
-    <string name="email">Email</string>
+    <string name="email">Email </string>
     <string name="password">Password</string>
-    <string name="login">Login</string>
+    <string name="login">Login </string>
     <string name="no_account">Don\'t have an account?</string>
     <string name="sign_up">Sign up</string>
-    <string name="title_activity_signup">Sign in</string>
     <string name="user_exists">User with this username already exists</string>
 
     <string name="sign_up_success">Registration successful</string>
@@ -15,6 +14,15 @@
     <string name="auth_success">Sign in success</string>
     <string name="sign_out">Sign out</string>
     <string name="logout_success">Logout success</string>
-    <string name="mapChange" >Edit route</string>
+    <string name="mapChange">Edit route </string>
+    <string name="firstName">First name </string>
+    <string name="lastName">Last name </string>
+    <string name="age">Age </string>
+    <string name="busSize">Bus capacity </string>
+    <string name="userDetails">Details</string>
+    <string name="databaseError">Database connection error</string>
+    <string name="networkError">Network connection not available</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
 
 </resources>

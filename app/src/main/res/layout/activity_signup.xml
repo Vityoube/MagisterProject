@@ -19,30 +19,90 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/email"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display2" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <EditText
-            android:id="@+id/email"
+            android:id="@+id/usernameInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
-            android:inputType="textEmailAddress"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+            android:inputType="text"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <TextView
             android:id="@+id/Password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/password"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display2" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <EditText
-            android:id="@+id/password"
+            android:id="@+id/passwordInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPassword"
-            android:textAppearance="@style/TextAppearance.AppCompat.Display1" />
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/firstName"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <EditText
+            android:id="@+id/firstNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <TextView
+            android:id="@+id/lastName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/lastName"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <EditText
+            android:id="@+id/lastNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <TextView
+            android:id="@+id/age"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/age"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <EditText
+            android:id="@+id/ageInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="number"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <TextView
+            android:id="@+id/busSize"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/busSize"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+        <EditText
+            android:id="@+id/busSizeInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:inputType="number"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
         <Button
             android:id="@+id/signupButton"

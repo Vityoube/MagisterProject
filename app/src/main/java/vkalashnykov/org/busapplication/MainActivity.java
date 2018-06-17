@@ -1,22 +1,21 @@
 package vkalashnykov.org.busapplication;
 
-import android.*;
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.Point;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -25,15 +24,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.gcm.Task;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.PlaceDetectionClient;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -41,10 +43,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -52,10 +59,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import vkalashnykov.org.busapplication.domain.Driver;
+import vkalashnykov.org.busapplication.domain.Latitude;
+import vkalashnykov.org.busapplication.domain.Longitude;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
@@ -72,11 +84,18 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private FirebaseAuth.AuthStateListener mAuthListener;
     private LocationManager locationManager;
     private String provider;
+    private String userEmail;
+    private String driverKey;
+    private LatLng currentPlaceSelection=null;
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     GoogleMap mMap;
-    private ArrayList markerPoints = new ArrayList();
+    private ArrayList<vkalashnykov.org.busapplication.domain.Point> markerPoints = new ArrayList();
     private boolean editMap = false;
+    final FirebaseDatabase database=FirebaseDatabase.getInstance();
+    DatabaseReference driversRef;
+    private boolean firstTimeLoading=true;
+    private ValueEventListener driverListener;
 
     @Override
     protected void onPause() {
@@ -99,16 +118,23 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         setContentView(R.layout.activity_main);
 
         Intent intent = getIntent();
+
         welcomeMessage = (TextView) findViewById(R.id.welcome);
+        userEmail=intent.getStringExtra("USER_EMAIL");
+        welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + userEmail + "!");
+        driverKey=intent.getStringExtra("USER_KEY");
+        markerPoints=(ArrayList< vkalashnykov.org.busapplication.domain.Point>)
+                intent.getSerializableExtra("ROUTE");
+        driversRef=database.getReference().child("drivers");
 
-        welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + intent.getStringExtra("org.vkalashnykov.busapplication.USER_EMAIL") + "!");
-
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
+                .addApi(Places.PLACE_DETECTION_API)
                 .build();
         mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -128,6 +154,30 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 }
             }
         };
+//        driverListener=new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//
+//                for (DataSnapshot snapshot: dataSnapshot.getChildren()){
+//                    Driver driver=snapshot.getValue(Driver.class);
+//                    if(userEmail.equals(driver.getUsername()) ){
+//                        driverKey=snapshot.getKey();
+//                        if (firstTimeLoading) {
+//                            markerPoints = driver.getRoute();
+//                            firstTimeLoading = false;
+//                        }
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Toast.makeText(MainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT);
+//            }
+//        };
+
+
+
     }
 
     @Override
@@ -140,6 +190,10 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+//        driversRef.addListenerForSingleValueEvent(driverListener);
+
+
+
     }
 
     @Override
@@ -163,6 +217,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     public void onLocationChanged(Location location) {
         handleNewLocation(location);
 
+
     }
 
     @Override
@@ -173,6 +228,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
 
         }
+
         Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
 
         if (location == null) {
@@ -190,6 +246,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         double currentLatitude = location.getLatitude();
         double currentLongitude = location.getLongitude();
         LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        driversRef.child(driverKey).child("currentPosition").
+                setValue(new vkalashnykov.org.busapplication.domain.Point(currentLatitude,currentLongitude));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
     }
 
@@ -222,60 +280,78 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
         }
         mMap.setMyLocationEnabled(true);
+
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
                 if (editMap) {
-                    if (markerPoints.size() > 1) {
-                        markerPoints.clear();
-                        mMap.clear();
-                    }
+                    String apiKey="AIzaSyAcwyEytYneiCAeth4iXI8iMyatyHUkN5U";
+                    String placeUrl="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+
+                            latLng.latitude+","+latLng.longitude+"&radius=10&type=bus_station&key="+apiKey;
+                    String data="";
+                    currentPlaceSelection=latLng;
+                    CallPlacesAPI callPlacesAPI=new CallPlacesAPI();
+                    callPlacesAPI.execute(placeUrl);
+}
+            }
+        });
+        if (markerPoints!=null && !markerPoints.isEmpty()) {
+            MarkerOptions markerOptions = new MarkerOptions();
+            for (vkalashnykov.org.busapplication.domain.Point point : markerPoints) {
+                LatLng marker=new LatLng(point.getLatitude(),point.getLongitude());
+                markerOptions.position(marker);
+                mMap.addMarker(markerOptions);
+            }
 
-                    // Adding new item to the ArrayList
-                    markerPoints.add(latLng);
-
-                    // Creating MarkerOptions
-                    MarkerOptions options = new MarkerOptions();
-
-                    // Setting the position of the marker
-                    options.position(latLng);
-                    if (markerPoints.size() == 1) {
-                        options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                    } else if (markerPoints.size() == 2) {
-                        options.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                    }
-
-
-
-                    // Checks, whether start and end locations are captured
-                    if (markerPoints.size() >= 2) {
-                        LatLng origin = (LatLng) markerPoints.get(0);
-                        LatLng dest = (LatLng) markerPoints.get(1);
-
-                        // Getting URL to the Google Directions API
-                        String url = getDirectionsUrl(origin, dest);
-
-                        DownloadTask downloadTask = new DownloadTask();
-
-                        // Start downloading json data from Google Directions API
-                        downloadTask.execute(url);
-                    }
-                    // Add new marker to the Google Map Android API V2
-                    mMap.addMarker(options);
+            List<String> urls = getDirectionsUrl(markerPoints);
+            if (urls.size() > 1) {
+                for (int i = 0; i < urls.size(); i++) {
+                    String url = urls.get(i);
+                    DownloadTask downloadTask = new DownloadTask();
+                    // Start downloading json data from Google Directions API
+                    downloadTask.execute(url);
                 }
+            }
+        }
+
+    }
+
+    public void setEditRoute(View view) {
+        Button button = (Button) findViewById(R.id.editButton);
+        editMap = !editMap;
+        if (editMap) {
+            button.setText("Save Route");
+        } else {
+            saveRouteOnDatabase();
+
+            button.setText("Edit Route");
+
+
+        }
+
+
+    }
+
+    private void saveRouteOnDatabase() {
+        driversRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Driver driver=dataSnapshot.getValue(Driver.class);
+                driver.setRoute(markerPoints);
+                dataSnapshot.getRef().setValue(driver);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(MainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT);
             }
         });
     }
 
-    public void setEditRoute(View view) {
-        Button button=(Button)findViewById(R.id.editButton);
-        editMap=!editMap;
-        if (editMap){
-            button.setText("Save Route");
-        } else{
-            button.setText("Edit Route");
-        }
-
+    public void userDetails(View view) {
+        Intent userDetailsIntent=new Intent(this,UserDetailsActivity.class);
+        userDetailsIntent.putExtra("USER_EMAIL",userEmail);
+        startActivity(userDetailsIntent);
 
     }
 
@@ -335,14 +411,10 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
         @Override
         protected void onPostExecute(List<List<HashMap<String,String>>> result) {
-            mMap.clear();
-            ArrayList points = null;
-            PolylineOptions lineOptions = null;
-            MarkerOptions markerOptions = new MarkerOptions();
 
             for (int i = 0; i < result.size(); i++) {
-                points = new ArrayList();
-                lineOptions = new PolylineOptions();
+                ArrayList points = new ArrayList();
+                PolylineOptions lineOptions= new PolylineOptions();
 
                 List<HashMap<String,String>> path = result.get(i);
 
@@ -362,40 +434,16 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 lineOptions.width(12);
                 lineOptions.color(Color.RED);
                 lineOptions.geodesic(true);
-
+                mMap.addPolyline(lineOptions);
             }
 
-// Drawing polyline in the Google Map for the i-th route
-            mMap.addPolyline(lineOptions);
+
         }
     }
 
-    private String getDirectionsUrl(LatLng origin, LatLng dest) {
-
-        // Origin of route
-        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
-
-        // Destination of route
-        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
-
-        // Sensor enabled
-        String sensor = "sensor=false";
-        String mode = "mode=driving";
-
-        // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&" + mode;
-
-        // Output format
-        String output = "json";
-
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
 
 
-        return url;
-    }
-
-    private String downloadUrl(String strUrl) throws IOException {
+    public String downloadUrl(String strUrl) throws IOException {
         String data = "";
         InputStream iStream = null;
         HttpURLConnection urlConnection = null;
@@ -427,6 +475,107 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             iStream.close();
             urlConnection.disconnect();
         }
+        return data;
+    }
+    private List<String> getDirectionsUrl(ArrayList<vkalashnykov.org.busapplication.domain.Point> markerPoints) {
+        List<String> mUrls = new ArrayList<>();
+        if (markerPoints.size() > 1) {
+            String str_origin = markerPoints.get(0).getLatitude() + "," + markerPoints.get(0).getLongitude();
+            String str_dest = markerPoints.get(1).getLatitude()  + "," + markerPoints.get(1).getLongitude();
+
+            String sensor = "sensor=false";
+            String parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
+            String output = "json";
+            String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+
+            mUrls.add(url);
+            for (int i = 2; i < markerPoints.size(); i++)//loop starts from 2 because 0 and 1 are already printed
+            {
+                str_origin = str_dest;
+                str_dest = markerPoints.get(i).getLatitude()  + "," + markerPoints.get(i).getLongitude();
+                parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
+                url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+                mUrls.add(url);
+            }
+        }
+
+        return mUrls;
+    }
+    private class CallPlacesAPI extends AsyncTask<String,String,String>{
+
+
+
+        @Override
+        protected String doInBackground(String... strings) {
+            String data=null;
+            try {
+                data=sendRequest(strings[0]);
+
+            } catch (IOException e) {
+                Log.d("PlacesAPI",e.toString());
+            }
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(String response) {
+            super.onPostExecute(response);
+            try {
+                JSONObject placeResponse=new JSONObject(response);
+                if(!"ZERO_RESULTS".equals(placeResponse.get("status")) ){
+                    markerPoints.add(
+                            new vkalashnykov.org.busapplication.domain.Point(
+                                    currentPlaceSelection.latitude,
+                                    currentPlaceSelection.longitude
+                            )
+                    );
+
+
+                    MarkerOptions markerOptions = new MarkerOptions();
+
+                    markerOptions.position(currentPlaceSelection);
+                    mMap.addMarker(markerOptions);
+                    List<String> urls = getDirectionsUrl(markerPoints);
+                    if (urls.size() > 1) {
+                        for (int i = 0; i < urls.size(); i++) {
+                            String url = urls.get(i);
+                            DownloadTask downloadTask = new DownloadTask();
+                            // Start downloading json data from Google Directions API
+                            downloadTask.execute(url);
+                        }
+                    }
+                }
+            } catch (JSONException e){
+                Log.d("PlacesAPI",e.toString());
+            }
+        }
+    }
+
+
+    public String sendRequest(String uri) throws IOException{
+        InputStream iStream = null;
+        HttpURLConnection urlConnection = null;
+        String data=null;
+        try {
+            URL url=new URL(uri);
+            urlConnection= (HttpURLConnection) url.openConnection();
+            iStream=urlConnection.getInputStream();
+            StringBuffer sb=new StringBuffer();
+            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+            String line="";
+            while((line=br.readLine())!=null){
+                sb.append(line);
+            }
+            data=sb.toString();
+            br.close();
+
+        } catch (Exception e) {
+            Log.d("Exception", e.toString());
+        } finally {
+            iStream.close();
+            urlConnection.disconnect();
+        }
+        Log.d("PLACES_API",data);
         return data;
     }
 }

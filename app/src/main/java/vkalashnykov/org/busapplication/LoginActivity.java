@@ -1,6 +1,9 @@
 package vkalashnykov.org.busapplication;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +18,13 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import vkalashnykov.org.busapplication.domain.Driver;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -23,7 +33,8 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-
+    final FirebaseDatabase database=FirebaseDatabase.getInstance();
+    DatabaseReference driversRef;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +53,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         };
+        driversRef=database.getReference().child("drivers");
 
     }
 
@@ -66,33 +78,67 @@ public class LoginActivity extends AppCompatActivity {
 
 
     public void login(View view) {
-        email=(EditText)findViewById(R.id.email);
-        password=(EditText)findViewById(R.id.password);
-        final Intent intent=new Intent(this,MainActivity.class);
-        mAuth.signInWithEmailAndPassword(email.getText().toString(),
-                password.getText().toString())
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d("Signin_complete", "signInWithEmail:onComplete:" + task.isSuccessful());
+        if (!isOnline()){
+            Toast.makeText(this, R.string.networkError,
+                    Toast.LENGTH_SHORT).show();
+        } else {
+            email=(EditText)findViewById(R.id.email);
+            password=(EditText)findViewById(R.id.password);
+            final Intent intent=new Intent(this,MainActivity.class);
+            mAuth.signInWithEmailAndPassword(email.getText().toString(),
+                    password.getText().toString())
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            Log.d("Signin_complete", "signInWithEmail:onComplete:" + task.isSuccessful());
 
-                        // If sign in fails, display a message to the user. If sign in succeeds
-                        // the auth state listener will be notified and logic to handle the
-                        // signed in user can be handled in the listener.
-                        if (!task.isSuccessful()) {
-                            Log.w("Signin_fail", "signInWithEmail:failed", task.getException());
-                            Toast.makeText(LoginActivity.this, R.string.auth_failed,
-                                    Toast.LENGTH_SHORT).show();
-                        } else{
-                            Toast.makeText(LoginActivity.this, R.string.auth_success,
-                                    Toast.LENGTH_SHORT).show();
-                            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            intent.putExtra("org.vkalashnykov.busapplication.USER_EMAIL",email.getText().toString());
-                            startActivity(intent);
-                            finish();
+                            // If sign in fails, display a message to the user. If sign in succeeds
+                            // the auth state listener will be notified and logic to handle the
+                            // signed in user can be handled in the listener.
+                            if (!task.isSuccessful()) {
+                                Log.w("Signin_fail", "signInWithEmail:failed", task.getException());
+                                Toast.makeText(LoginActivity.this, R.string.auth_failed,
+                                        Toast.LENGTH_SHORT).show();
+                            } else{
 
+                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                intent.putExtra("USER_EMAIL",email.getText().toString());
+                                final String userEmail=email.getText().toString();
+                                driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                                            Driver driver=snapshot.getValue(Driver.class);
+                                            if(userEmail.equals(driver.getUsername()) ){
+                                                intent.putExtra("USER_KEY",snapshot.getKey());
+                                                intent.putExtra("ROUTE",driver.getRoute());
+                                                startActivity(intent);
+                                                finish();
+                                            }
+                                        }
+
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                        Toast.makeText(LoginActivity.this,R.string.databaseError,Toast.LENGTH_SHORT);
+                                    }
+                                });
+                                Toast.makeText(LoginActivity.this, R.string.auth_success,
+                                        Toast.LENGTH_SHORT).show();
+
+
+                            }
                         }
-                    }
-                });
+                    });
+        }
+
+    }
+
+    private boolean isOnline() {
+        ConnectivityManager cm =
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        return netInfo != null && netInfo.isConnectedOrConnecting();
     }
 }

@@ -3,8 +3,8 @@
     <string name="app_name">Aplikacja Bus</string>
     <string name="welcome">Zapraszamy</string>
 
-    <string name="email">Email</string>
-    <string name="password">Hasło</string>
+    <string name="email">Email </string>
+    <string name="password">Hasło </string>
     <string name="login">Załoguj</string>
     <string name="no_account">Nie masz konta?</string>
     <string name="sign_up">Zarejestruj</string>
@@ -15,6 +15,12 @@
     <string name="auth_success">Zalogowałeś się pomyślnie</string>
     <string name="sign_out">Wyloguj</string>
     <string name="logout_success">Wylogowałeś się pomyślnie</string>
-    <string name="mapChange" >Zmiana trasy</string>
-
+    <string name="mapChange" >Zmiana trasy </string>
+    <string name="firstName">Imie </string>
+    <string name="lastName">Nazwisko</string>
+    <string name="age">Wiek </string>
+    <string name="busSize">Pojemność autobusu </string>
+    <string name="userDetails">Detale</string>
+    <string name="databaseError">Błąd połączenia z bazą danych</string>
+    <string name="networkError">Błąd połączenia z siecią</string>
 </resources>

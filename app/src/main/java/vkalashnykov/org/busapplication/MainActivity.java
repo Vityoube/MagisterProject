@@ -58,9 +58,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -523,18 +525,41 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             try {
                 JSONObject placeResponse=new JSONObject(response);
                 if(!"ZERO_RESULTS".equals(placeResponse.get("status")) ){
-                    markerPoints.add(
+                    vkalashnykov.org.busapplication.domain.Point pointToAdd=
                             new vkalashnykov.org.busapplication.domain.Point(
-                                    currentPlaceSelection.latitude,
-                                    currentPlaceSelection.longitude
-                            )
+                            currentPlaceSelection.latitude,
+                            currentPlaceSelection.longitude
                     );
-
-
                     MarkerOptions markerOptions = new MarkerOptions();
-
                     markerOptions.position(currentPlaceSelection);
-                    mMap.addMarker(markerOptions);
+                    Marker marker = mMap.addMarker(markerOptions);
+                    boolean isToRemove=false;
+                    int index=0;
+                    DecimalFormat df = new DecimalFormat("#.###");
+                    df.setRoundingMode(RoundingMode.FLOOR);
+                    for(vkalashnykov.org.busapplication.domain.Point point : markerPoints){
+                        if (df.format(point.getLatitude()).equals(df.format(pointToAdd.getLatitude()))
+                                && df.format(point.getLongitude()).equals(df.format(pointToAdd.getLongitude()))){
+                            isToRemove=true;
+                            index=markerPoints.indexOf(point);
+                        }
+                    }
+                    if (isToRemove) {
+                        markerPoints.remove(index);
+                       mMap.clear();
+                       for (vkalashnykov.org.busapplication.domain.Point point : markerPoints){
+                           LatLng latLng=new LatLng(point.getLatitude(),point.getLongitude());
+                           markerOptions.position(latLng);
+                           mMap.addMarker(markerOptions);
+                       }
+
+                    }
+                    else {
+                        markerPoints.add(pointToAdd);
+                    }
+
+
+
                     List<String> urls = getDirectionsUrl(markerPoints);
                     if (urls.size() > 1) {
                         for (int i = 0; i < urls.size(); i++) {

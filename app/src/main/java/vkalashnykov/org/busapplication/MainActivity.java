@@ -3,14 +3,11 @@ package vkalashnykov.org.busapplication;
 import android.Manifest;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.Point;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -24,21 +21,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -60,7 +50,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -68,16 +57,12 @@ import java.util.HashMap;
 import java.util.List;
 
 import vkalashnykov.org.busapplication.domain.Driver;
-import vkalashnykov.org.busapplication.domain.Latitude;
-import vkalashnykov.org.busapplication.domain.Longitude;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener, OnMapReadyCallback {
 
-    private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 0;
-    private static final int PERMISSIONS_REQUEST_ACCESS_COARSE_LOCATION = 1;
-    private static final float DEFAULT_ZOOM = 1.0f;
+
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private static final String BUS = "BusApplication";
     TextView welcomeMessage;
@@ -87,6 +72,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private LocationManager locationManager;
     private String provider;
     private String userEmail;
+    private String driverName;
     private String driverKey;
     private LatLng currentPlaceSelection=null;
     LocationRequest mLocationRequest;
@@ -98,6 +84,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     DatabaseReference driversRef;
     private boolean firstTimeLoading=true;
     private ValueEventListener driverListener;
+    private String role;
 
     @Override
     protected void onPause() {
@@ -117,13 +104,16 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
         Intent intent = getIntent();
+        role=intent.getStringExtra("ROLE");
+        setContentView(R.layout.activity_driver_main);
+
+
 
         welcomeMessage = (TextView) findViewById(R.id.welcome);
         userEmail=intent.getStringExtra("USER_EMAIL");
-        welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + userEmail + "!");
+        driverName=intent.getStringExtra("NAME");
+        welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
         driverKey=intent.getStringExtra("USER_KEY");
         markerPoints=(ArrayList< vkalashnykov.org.busapplication.domain.Point>)
                 intent.getSerializableExtra("ROUTE");
@@ -131,6 +121,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -238,7 +230,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         } else {
             handleNewLocation(location);
         }
-        ;
 
     }
 

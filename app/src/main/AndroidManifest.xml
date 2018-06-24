@@ -35,7 +35,11 @@
         </activity>
         <activity android:name=".SignupActivity" />
         <activity android:name=".MainActivity" />
-        <activity android:name=".UserDetailsActivity"></activity>
+        <activity android:name=".UserDetailsActivity" />
+        <activity
+            android:name=".ClientMainActivity"
+            android:label="@string/title_activity_client_main"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>

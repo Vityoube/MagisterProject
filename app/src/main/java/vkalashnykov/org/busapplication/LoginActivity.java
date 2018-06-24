@@ -24,6 +24,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import vkalashnykov.org.busapplication.domain.Client;
 import vkalashnykov.org.busapplication.domain.Driver;
 
 public class LoginActivity extends AppCompatActivity {
@@ -35,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth.AuthStateListener mAuthListener;
     final FirebaseDatabase database=FirebaseDatabase.getInstance();
     DatabaseReference driversRef;
+    DatabaseReference clientsRef;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +56,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
         driversRef=database.getReference().child("drivers");
+        clientsRef=database.getReference().child("clients");
 
     }
 
@@ -73,6 +76,7 @@ public class LoginActivity extends AppCompatActivity {
 
     public void goToSignUp(View view) {
         Intent intent=new Intent(this,SignupActivity.class);
+        intent.putExtra("ROLE","driver");
         startActivity(intent);
     }
 
@@ -84,7 +88,7 @@ public class LoginActivity extends AppCompatActivity {
         } else {
             email=(EditText)findViewById(R.id.email);
             password=(EditText)findViewById(R.id.password);
-            final Intent intent=new Intent(this,MainActivity.class);
+
             mAuth.signInWithEmailAndPassword(email.getText().toString(),
                     password.getText().toString())
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -101,8 +105,6 @@ public class LoginActivity extends AppCompatActivity {
                                         Toast.LENGTH_SHORT).show();
                             } else{
 
-                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                intent.putExtra("USER_EMAIL",email.getText().toString());
                                 final String userEmail=email.getText().toString();
                                 driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
@@ -110,9 +112,18 @@ public class LoginActivity extends AppCompatActivity {
                                         for(DataSnapshot snapshot : dataSnapshot.getChildren()){
                                             Driver driver=snapshot.getValue(Driver.class);
                                             if(userEmail.equals(driver.getUsername()) ){
+                                                final Intent intent=
+                                                        new Intent(LoginActivity.this,
+                                                                MainActivity.class);
+                                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                                intent.putExtra("USER_EMAIL",email.getText().toString());
                                                 intent.putExtra("USER_KEY",snapshot.getKey());
                                                 intent.putExtra("ROUTE",driver.getRoute());
+                                                intent.putExtra("NAME",
+                                                        driver.getFirstName()+" "+driver.getLastName());
                                                 startActivity(intent);
+                                                Toast.makeText(LoginActivity.this, R.string.auth_success,
+                                                        Toast.LENGTH_SHORT).show();
                                                 finish();
                                             }
                                         }
@@ -121,11 +132,40 @@ public class LoginActivity extends AppCompatActivity {
 
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
-                                        Toast.makeText(LoginActivity.this,R.string.databaseError,Toast.LENGTH_SHORT);
+                                        Toast.makeText(LoginActivity.this,
+                                                R.string.databaseError,Toast.LENGTH_SHORT).show();
                                     }
                                 });
-                                Toast.makeText(LoginActivity.this, R.string.auth_success,
-                                        Toast.LENGTH_SHORT).show();
+                                clientsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        for (DataSnapshot snapshot :dataSnapshot.getChildren()){
+                                            Client client=snapshot.getValue(Client.class);
+                                            if (userEmail.equals(client.getUsername())){
+                                                final Intent intent=
+                                                        new Intent(LoginActivity.this,
+                                                                ClientMainActivity.class);
+                                                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                                intent.putExtra("USER_EMAIL",email.getText().toString());
+                                                intent.putExtra("USER_KEY",snapshot.getKey());
+                                                intent.putExtra("NAME",
+                                                        client.getFirstName()+" "+client.getLastName());
+                                                startActivity(intent);
+                                                Toast.makeText(LoginActivity.this, R.string.auth_success,
+                                                        Toast.LENGTH_SHORT).show();
+                                                finish();
+                                            }
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                        Toast.makeText(LoginActivity.this,
+                                                R.string.databaseError,Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+
+
 
 
                             }
@@ -140,5 +180,11 @@ public class LoginActivity extends AppCompatActivity {
                 (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo netInfo = cm.getActiveNetworkInfo();
         return netInfo != null && netInfo.isConnectedOrConnecting();
+    }
+
+    public void goToSignUpClient(View view) {
+        Intent intent=new Intent(this,SignupActivity.class);
+        intent.putExtra("ROLE","client");
+        startActivity(intent);
     }
 }

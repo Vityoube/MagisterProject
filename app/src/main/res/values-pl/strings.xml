@@ -7,7 +7,8 @@
     <string name="password">Hasło </string>
     <string name="login">Załoguj</string>
     <string name="no_account">Nie masz konta?</string>
-    <string name="sign_up">Zarejestruj</string>
+    <string name="sign_up_driver">Zarejestruj się jako kierowca</string>
+    <string name="sign_up_client">Zarejestruj się jako klient</string>
     <string name="user_exists">Uzytkownik z takim loginem już istnieje</string>
 
     <string name="sign_up_success">Zarejestrowałeś się pomyślnie</string>
@@ -23,4 +24,7 @@
     <string name="userDetails">Detale</string>
     <string name="databaseError">Błąd połączenia z bazą danych</string>
     <string name="networkError">Błąd połączenia z siecią</string>
+    <string name="create_account" >Utwórz konto</string>
+    <string name="password2" >Powtórz Hasło</string>
+    <string name="passwordsNotMatch">Hasła nie są takie same</string>
 </resources>

@@ -61,12 +61,20 @@
             android:textSize="24sp" />
 
         <Button
-            android:id="@+id/signupButton"
+            android:id="@+id/signupDriverButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/colorPrimary"
             android:onClick="goToSignUp"
-            android:text="@string/sign_up" />
+            android:text="@string/sign_up_driver" />
+
+        <Button
+            android:id="@+id/signupClientButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/colorPrimary"
+            android:onClick="goToSignUpClient"
+            android:text="@string/sign_up_client" />
 
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

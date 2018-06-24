@@ -52,7 +52,8 @@ public class UserDetailsActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(UserDetailsActivity.this,R.string.databaseError, Toast.LENGTH_SHORT);
+                Toast.makeText(UserDetailsActivity.this,R.string.databaseError,
+                        Toast.LENGTH_SHORT).show();
                 firstNameText="ERROR#";
                 lastNameText="ERROR#";
                 ageText="ERROR#";

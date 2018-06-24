@@ -140,7 +140,6 @@ public class SignupActivity extends AppCompatActivity {
                                                                     intent.putExtra("USER_KEY", snapshot.getKey());
                                                                     intent.putExtra("NAME",
                                                                             driver.getFirstName()+" "+driver.getLastName());
-                                                                    intent.putExtra("ROUTE", driver.getRoute());
                                                                     startActivity(intent);
                                                                     finish();
                                                                 }

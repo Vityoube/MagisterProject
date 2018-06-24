@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import vkalashnykov.org.busapplication.domain.Driver;
+import vkalashnykov.org.busapplication.domain.Route;
 
 @SuppressWarnings("deprecation")
 public class MainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
@@ -82,9 +83,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private boolean editMap = false;
     final FirebaseDatabase database=FirebaseDatabase.getInstance();
     DatabaseReference driversRef;
-    private boolean firstTimeLoading=true;
-    private ValueEventListener driverListener;
-    private String role;
+    DatabaseReference routesRef;
 
     @Override
     protected void onPause() {
@@ -105,7 +104,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
-        role=intent.getStringExtra("ROLE");
         setContentView(R.layout.activity_driver_main);
 
 
@@ -115,9 +113,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         driverName=intent.getStringExtra("NAME");
         welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
         driverKey=intent.getStringExtra("USER_KEY");
-        markerPoints=(ArrayList< vkalashnykov.org.busapplication.domain.Point>)
-                intent.getSerializableExtra("ROUTE");
         driversRef=database.getReference().child("drivers");
+        routesRef=database.getReference().child("routes");
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -148,6 +145,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 }
             }
         };
+        routesRef.child(driverKey).child("driverName").setValue(driverName);
 //        driverListener=new ValueEventListener() {
 //            @Override
 //            public void onDataChange(DataSnapshot dataSnapshot) {
@@ -184,7 +182,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
-//        driversRef.addListenerForSingleValueEvent(driverListener);
 
 
 
@@ -239,7 +236,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         double currentLatitude = location.getLatitude();
         double currentLongitude = location.getLongitude();
         LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-        driversRef.child(driverKey).child("currentPosition").
+        routesRef.child(driverKey).child("currentPosition").
                 setValue(new vkalashnykov.org.busapplication.domain.Point(currentLatitude,currentLongitude));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
     }
@@ -274,6 +271,38 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         }
         mMap.setMyLocationEnabled(true);
 
+        routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                        Route route=dataSnapshot.getValue(Route.class);
+                        markerPoints=route.getRoute();
+                        MarkerOptions markerOptions = new MarkerOptions();
+                        for (vkalashnykov.org.busapplication.domain.Point point : markerPoints) {
+                            LatLng marker=new LatLng(point.getLatitude(),point.getLongitude());
+                            markerOptions.position(marker);
+                            mMap.addMarker(markerOptions);
+                        }
+
+                        List<String> urls = getDirectionsUrl(markerPoints);
+                        if (urls.size() > 1) {
+                            for (int i = 0; i < urls.size(); i++) {
+                                String url = urls.get(i);
+                                DownloadTask downloadTask = new DownloadTask();
+                                // Start downloading json data from Google Directions API
+                                downloadTask.execute(url);
+                            }
+                        }
+            }
+
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(MainActivity.this,
+                        R.string.databaseError,Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -285,27 +314,9 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                     currentPlaceSelection=latLng;
                     CallPlacesAPI callPlacesAPI=new CallPlacesAPI();
                     callPlacesAPI.execute(placeUrl);
-}
-            }
-        });
-        if (markerPoints!=null && !markerPoints.isEmpty()) {
-            MarkerOptions markerOptions = new MarkerOptions();
-            for (vkalashnykov.org.busapplication.domain.Point point : markerPoints) {
-                LatLng marker=new LatLng(point.getLatitude(),point.getLongitude());
-                markerOptions.position(marker);
-                mMap.addMarker(markerOptions);
-            }
-
-            List<String> urls = getDirectionsUrl(markerPoints);
-            if (urls.size() > 1) {
-                for (int i = 0; i < urls.size(); i++) {
-                    String url = urls.get(i);
-                    DownloadTask downloadTask = new DownloadTask();
-                    // Start downloading json data from Google Directions API
-                    downloadTask.execute(url);
                 }
             }
-        }
+        });
 
     }
 
@@ -326,17 +337,17 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
     private void saveRouteOnDatabase() {
-        driversRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
+        routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Driver driver=dataSnapshot.getValue(Driver.class);
-                driver.setRoute(markerPoints);
-                dataSnapshot.getRef().setValue(driver);
+                Route route=dataSnapshot.getValue(Route.class);
+                route.setRoute(markerPoints);
+                dataSnapshot.getRef().setValue(route);
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(MainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT);
+                Toast.makeText(MainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -521,6 +532,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                             currentPlaceSelection.latitude,
                             currentPlaceSelection.longitude
                     );
+                    if (markerPoints==null)
+                        markerPoints=new ArrayList<>();
                     MarkerOptions markerOptions = new MarkerOptions();
                     markerOptions.position(currentPlaceSelection);
                     Marker marker = mMap.addMarker(markerOptions);

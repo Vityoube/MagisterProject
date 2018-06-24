@@ -26,7 +26,7 @@
     <string name="create_account">Create Account</string>
     <string name="password2">Confirm Password</string>
     <string name="passwordsNotMatch">Passwords do not match</string>
-    <string name="title_activity_client_main">ClientMainActivity</string>
+    <string name="send_message">Send Message</string>
 
     <!-- TODO: Remove or change this placeholder text -->
 

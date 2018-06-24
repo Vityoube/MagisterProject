@@ -27,4 +27,5 @@
     <string name="create_account" >Utwórz konto</string>
     <string name="password2" >Powtórz Hasło</string>
     <string name="passwordsNotMatch">Hasła nie są takie same</string>
+    <string name="send_message">Wyślij wiadomość</string>
 </resources>

@@ -24,8 +24,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+
 import vkalashnykov.org.busapplication.domain.Client;
 import vkalashnykov.org.busapplication.domain.Driver;
+import vkalashnykov.org.busapplication.domain.Point;
+import vkalashnykov.org.busapplication.domain.Route;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -106,25 +110,29 @@ public class LoginActivity extends AppCompatActivity {
                             } else{
 
                                 final String userEmail=email.getText().toString();
+                                Route route=null;
+                                final DatabaseReference routesRef=database.getReference().child("routes");
+
+                                final Intent intent=
+                                        new Intent(LoginActivity.this,
+                                                MainActivity.class);
                                 driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {
                                         for(DataSnapshot snapshot : dataSnapshot.getChildren()){
                                             Driver driver=snapshot.getValue(Driver.class);
                                             if(userEmail.equals(driver.getUsername()) ){
-                                                final Intent intent=
-                                                        new Intent(LoginActivity.this,
-                                                                MainActivity.class);
+
                                                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                                 intent.putExtra("USER_EMAIL",email.getText().toString());
                                                 intent.putExtra("USER_KEY",snapshot.getKey());
-                                                intent.putExtra("ROUTE",driver.getRoute());
                                                 intent.putExtra("NAME",
                                                         driver.getFirstName()+" "+driver.getLastName());
                                                 startActivity(intent);
                                                 Toast.makeText(LoginActivity.this, R.string.auth_success,
                                                         Toast.LENGTH_SHORT).show();
                                                 finish();
+
                                             }
                                         }
 
@@ -145,11 +153,13 @@ public class LoginActivity extends AppCompatActivity {
                                                 final Intent intent=
                                                         new Intent(LoginActivity.this,
                                                                 ClientMainActivity.class);
+
                                                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                                 intent.putExtra("USER_EMAIL",email.getText().toString());
                                                 intent.putExtra("USER_KEY",snapshot.getKey());
                                                 intent.putExtra("NAME",
                                                         client.getFirstName()+" "+client.getLastName());
+
                                                 startActivity(intent);
                                                 Toast.makeText(LoginActivity.this, R.string.auth_success,
                                                         Toast.LENGTH_SHORT).show();

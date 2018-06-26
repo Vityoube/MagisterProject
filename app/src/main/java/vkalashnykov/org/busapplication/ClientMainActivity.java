@@ -4,8 +4,10 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -39,6 +41,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -47,7 +51,17 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import vkalashnykov.org.busapplication.domain.Client;
 import vkalashnykov.org.busapplication.domain.Driver;
@@ -68,9 +82,11 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
     private String userEmail;
     String userKey;
     private GoogleMap mMap;
-    private ArrayList<Route> routes;
+    private ArrayList<String> routes;
+    private Route currentRoute;
     private int currentRouteOnList=0;
     private LinearLayout routesList;
+    private int routesListSize;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,6 +130,7 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
 
 
 
+
     }
 
     @Override
@@ -126,6 +143,7 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+        routesListSize=0;
     }
 
 
@@ -196,15 +214,14 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
 
         }
         mMap.setMyLocationEnabled(true);
-
         routesRef.addChildEventListener( new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Route addedRoute=dataSnapshot.getValue(Route.class);
-                routes.add(addedRoute);
+                final Route addedRoute=dataSnapshot.getValue(Route.class);
+                routes.add(dataSnapshot.getKey());
                 Toast.makeText(ClientMainActivity.this,"Added routes: "+routes.toString(),
                         Toast.LENGTH_SHORT).show();
-                LinearLayout routeLayout=new LinearLayout(ClientMainActivity.this);
+                final LinearLayout routeLayout=new LinearLayout(ClientMainActivity.this);
                 routeLayout.setOrientation(LinearLayout.HORIZONTAL);
                 TextView driverName=new TextView(ClientMainActivity.this);
                 driverName.setTypeface(Typeface.MONOSPACE,Typeface.BOLD_ITALIC);
@@ -218,6 +235,37 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 sendMessage.setText(R.string.send_message);
                 routeLayout.addView(driverName,textParam);
                 routeLayout.addView(sendMessage,textParam);
+                routesListSize++;
+                routeLayout.setId(routesListSize);
+                routeLayout.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        for(int i=0;i<routesList.getChildCount();i++){
+                            LinearLayout currentRouteOnList=(LinearLayout)routesList.getChildAt(i);
+                            currentRouteOnList.setBackgroundColor(View.INVISIBLE);
+                            routeLayout.setBackgroundColor(Color.parseColor("#FAFAFA"));
+                        }
+                        routeLayout.setBackgroundColor(Color.parseColor("#0000ff"));
+                        mMap.clear();
+                        ArrayList<Point> points=addedRoute.getRoute();
+                        for (Point point : points) {
+                            MarkerOptions markerOptions=new MarkerOptions();
+                            markerOptions.position(new LatLng(point.getLatitude(),point.getLongitude()));
+                            mMap.addMarker(markerOptions);
+                        }
+                        List<String> urls = getDirectionsUrl(points);
+                        if (urls.size() > 1) {
+                            for (int i = 0; i < urls.size(); i++) {
+                                String url = urls.get(i);
+                                DownloadTask downloadTask = new DownloadTask();
+                                // Start downloading json data from Google Directions API
+                                downloadTask.execute(url);
+                            }
+                        }
+
+                    }
+                });
+
                 routesList.addView(routeLayout);
 //                routeLayout.addView(sendMessage, );
 //                routesList.get
@@ -226,42 +274,15 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                Driver changedDriver=dataSnapshot.getValue(Driver.class);
-                routes.add(new Route(
-                        changedDriver.getFirstName()+" "+changedDriver.getLastName(),
-                        changedDriver.getRoute()));
+                Route changedRoute=dataSnapshot.getValue(Route.class);
+                routes.add(dataSnapshot.getKey());
                 Toast.makeText(ClientMainActivity.this,"Updated routes: "+routes.toString(),
                         Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Driver removedDriver=dataSnapshot.getValue(Driver.class);
-                Route route=new Route(
-                        removedDriver.getFirstName()+" "+removedDriver.getLastName(),
-                        removedDriver.getRoute());
-                int routeToRemove=-1;
-                for (Route currentRoute : routes){
-                    if (!route.getDriverName().equals(currentRoute.getDriverName())){
-                        continue;
-                    } else{
-                        for (int pointIndex=0,currentPointIndex=0;
-                             pointIndex<route.getRoute().size() &&
-                                     currentPointIndex<currentRoute.getRoute().size();
-                             pointIndex++,currentPointIndex++){
-                            Point pointToCompare=route.getRoute().get(pointIndex);
-                            Point currentPoint=route.getRoute().get(currentPointIndex);
-                            if (pointToCompare.getLongitude()==currentPoint.getLongitude()
-                                    && pointToCompare.getLatitude()==currentPoint.getLatitude()
-                                    && pointIndex==currentPointIndex){
-                                routeToRemove=currentPointIndex;
-                            }
-                        }
-                    }
-                }
-                if (routeToRemove!=-1){
-                    routes.remove(routeToRemove);
-                }
+                routes.remove(dataSnapshot.getKey());
 
             }
 
@@ -290,5 +311,151 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
         startActivity(intent);
         Toast.makeText(this, R.string.logout_success,
                 Toast.LENGTH_SHORT).show();
+    }
+
+    private List<String> getDirectionsUrl(ArrayList<vkalashnykov.org.busapplication.domain.Point> markerPoints) {
+        List<String> mUrls = new ArrayList<>();
+        if (markerPoints.size() > 1) {
+            String str_origin = markerPoints.get(0).getLatitude() + "," + markerPoints.get(0).getLongitude();
+            String str_dest = markerPoints.get(1).getLatitude()  + "," + markerPoints.get(1).getLongitude();
+
+            String sensor = "sensor=false";
+            String parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
+            String output = "json";
+            String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+
+            mUrls.add(url);
+            for (int i = 2; i < markerPoints.size(); i++)//loop starts from 2 because 0 and 1 are already printed
+            {
+                str_origin = str_dest;
+                str_dest = markerPoints.get(i).getLatitude()  + "," + markerPoints.get(i).getLongitude();
+                parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
+                url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+                mUrls.add(url);
+            }
+        }
+
+        return mUrls;
+    }
+
+    private class DownloadTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... url) {
+
+            String data = "";
+
+            try {
+                data = downloadUrl(url[0]);
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
+            }
+            return data;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            ParserTask parserTask = new ParserTask();
+
+
+            parserTask.execute(result);
+
+        }
+    }
+
+    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String,String>>>> {
+
+        // Parsing the data in non-ui thread
+        @Override
+        protected List<List<HashMap<String,String>>> doInBackground(String... jsonData) {
+
+            JSONObject jObject;
+            List<List<HashMap<String, String>>> routes = null;
+
+            try {
+                jObject = new JSONObject(jsonData[0]);
+                Log.d("ParserTask",jsonData[0].toString());
+                DataParser parser = new DataParser();
+                Log.d("ParserTask", parser.toString());
+
+                // Starts parsing data
+                routes = parser.parse(jObject);
+                Log.d("ParserTask","Executing routes");
+                Log.d("ParserTask",routes.toString());
+
+            } catch (Exception e) {
+                Log.d("ParserTask",e.toString());
+                e.printStackTrace();
+            }
+            return routes;
+        }
+
+        @Override
+        protected void onPostExecute(List<List<HashMap<String,String>>> result) {
+
+            for (int i = 0; i < result.size(); i++) {
+                ArrayList points = new ArrayList();
+                PolylineOptions lineOptions= new PolylineOptions();
+
+                List<HashMap<String,String>> path = result.get(i);
+
+                for (int j = 0; j < path.size(); j++) {
+                    HashMap<String,String> point = path.get(j);
+
+                    double lat = Double.parseDouble(point.get("lat"));
+                    double lng = Double.parseDouble(point.get("lng"));
+                    LatLng position = new LatLng(lat, lng);
+
+                    points.add(position);
+                }
+
+
+
+                lineOptions.addAll(points);
+                lineOptions.width(12);
+                lineOptions.color(Color.RED);
+                lineOptions.geodesic(true);
+                mMap.addPolyline(lineOptions);
+            }
+
+
+        }
+    }
+
+    public String downloadUrl(String strUrl) throws IOException {
+        String data = "";
+        InputStream iStream = null;
+        HttpURLConnection urlConnection = null;
+        try {
+            URL url = new URL(strUrl);
+
+            urlConnection = (HttpURLConnection) url.openConnection();
+
+            urlConnection.connect();
+
+            iStream = urlConnection.getInputStream();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+
+            StringBuffer sb = new StringBuffer();
+
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                sb.append(line);
+            }
+
+            data = sb.toString();
+
+            br.close();
+
+        } catch (Exception e) {
+            Log.d("Exception", e.toString());
+        } finally {
+            iStream.close();
+            urlConnection.disconnect();
+        }
+        return data;
     }
 }

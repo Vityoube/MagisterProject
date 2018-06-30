@@ -17,6 +17,12 @@ public class Route implements Serializable{
         this.route = route;
     }
 
+    public Route(String driverName, ArrayList<Point> route, Point currentPosition) {
+        this.driverName = driverName;
+        this.route = route;
+        this.currentPosition = currentPosition;
+    }
+
     public String getDriverName() {
         return driverName;
     }
@@ -31,5 +37,13 @@ public class Route implements Serializable{
 
     public void setRoute(ArrayList<Point> route) {
         this.route = route;
+    }
+
+    public Point getCurrentPosition() {
+        return currentPosition;
+    }
+
+    public void setCurrentPosition(Point currentPosition) {
+        this.currentPosition = currentPosition;
     }
 }

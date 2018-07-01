@@ -53,6 +53,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
@@ -89,10 +90,11 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
     private ArrayList<String> routes;
     private Route currentRoute;
     private int currentRouteOnList=0;
-    Map<String,Route > currentSelectedRoute;
+    Route currentSelectedRoute;
     private LinearLayout routesList;
     private int routesListSize;
     private Marker currentDriverPosition;
+    private String currentDriverKey;
 
     public ClientMainActivity() {
         currentSelectedRoute = null;
@@ -110,7 +112,7 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
         routes=new ArrayList<>();
         currentDriverPosition=null;
         routesList= (LinearLayout) findViewById(R.id.routesList);
-        currentSelectedRoute=new HashMap<>();
+        currentSelectedRoute=null;
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -234,6 +236,7 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
             @Override
             public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
                 final Route addedRoute=dataSnapshot.getValue(Route.class);
+                final String routeKey=dataSnapshot.getKey();
                 routes.add(dataSnapshot.getKey());
 
                 Toast.makeText(ClientMainActivity.this,"Added routes: "+routes.toString(),
@@ -257,39 +260,40 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 routeLayout.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        for(int i=0;i<routesList.getChildCount();i++){
-                            LinearLayout currentRouteOnList=(LinearLayout)routesList.getChildAt(i);
-                            currentRouteOnList.setBackgroundColor(View.INVISIBLE);
-                        }
-                        routeLayout.setBackgroundColor(Color.parseColor("#0000ff"));
-                        currentSelectedRoute=new HashMap<>();
-                        currentSelectedRoute.put(dataSnapshot.getKey(),addedRoute);
-                        mMap.clear();
-                        Route selectedRoute=currentSelectedRoute.get(dataSnapshot.getKey());
-                        MarkerOptions busMarker=new MarkerOptions();
-                        busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
-                        busMarker.position(
-                                new LatLng(
-                                        selectedRoute.getCurrentPosition().getLatitude(),
-                                        selectedRoute.getCurrentPosition().getLongitude()));
-                        currentDriverPosition=mMap.addMarker(busMarker);
-                        ArrayList<Point> points=selectedRoute.getRoute();
-                        for (Point point : points) {
-                            MarkerOptions markerOptions=new MarkerOptions();
-                            markerOptions.position(new LatLng(point.getLatitude(),point.getLongitude()));
-                            mMap.addMarker(markerOptions);
-                        }
+                        if (routeLayout.getSolidColor()!=Color.BLUE){
 
-                        List<String> urls = getDirectionsUrl(points);
-                        if (urls.size() > 1) {
-                            for (int i = 0; i < urls.size(); i++) {
-                                String url = urls.get(i);
-                                DownloadTask downloadTask = new DownloadTask();
-                                // Start downloading json data from Google Directions API
-                                downloadTask.execute(url);
+                            for (int i=0;i<routesList.getChildCount();i++){
+                                LinearLayout currentLayout=(LinearLayout)routesList.getChildAt(i);
+                                currentLayout.setBackgroundColor(Color.TRANSPARENT);
                             }
-                        }
+                            routeLayout.setBackgroundColor(Color.BLUE);
+                            currentDriverKey=routeKey;
+                            routesRef.child(routeKey).child("currentPosition").addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    if (currentDriverKey.equals(routeKey)){
+                                        Point changedDriverPosition=dataSnapshot.getValue(Point.class);
+                                        if(currentDriverPosition!=null){
+                                            currentDriverPosition.remove();
+                                        }
+                                        LatLng driverLatLng=new LatLng(changedDriverPosition.getLatitude(),
+                                                changedDriverPosition.getLongitude());
+                                        MarkerOptions busMarker=new MarkerOptions();
+                                        busMarker.position(driverLatLng);
+                                        busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
+                                        currentDriverPosition=mMap.addMarker(busMarker);
+                                    }
 
+
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+                                    Toast.makeText(ClientMainActivity.this,R.string.databaseError,
+                                            Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        }
                     }
                 });
 
@@ -301,121 +305,26 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                final Route changedRoute=dataSnapshot.getValue(Route.class);
-                final String routeKey=dataSnapshot.getKey();
-                int indexOfRoute=routes.indexOf(routeKey);
-                final LinearLayout routeToUpdate = (LinearLayout)routesList.getChildAt(indexOfRoute);
-                TextView drivernameText = (TextView)routeToUpdate.getChildAt(0);
-
-
-                if (currentSelectedRoute.containsKey(routeKey)){
-                    drivernameText.setText(currentSelectedRoute.get(routeKey).getDriverName());
-                    ArrayList<Point> pointsBeforeUpdate=currentSelectedRoute.get(routeKey).getRoute();
-                    currentSelectedRoute=new HashMap<>();
-
-                    currentSelectedRoute.put(routeKey,changedRoute);
-                    Route selectedRoute=currentSelectedRoute.get(routeKey);
-                    if (currentDriverPosition.getPosition().longitude!=selectedRoute.getCurrentPosition().getLongitude()
-                            && currentDriverPosition.getPosition().latitude!=
-                            selectedRoute.getCurrentPosition().getLatitude()){
-                        if (currentDriverPosition!=null){
-                            currentDriverPosition.remove();
-                            MarkerOptions busMarker=new MarkerOptions();
-                            busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
-                            busMarker.position(
-                                    new LatLng(
-                                            selectedRoute.getCurrentPosition().getLatitude(),
-                                            selectedRoute.getCurrentPosition().getLongitude()));
-                            currentDriverPosition=mMap.addMarker(busMarker);
-                        }
-                    }
-                    if (!pointsBeforeUpdate.containsAll(selectedRoute.getRoute())){
-                        ArrayList<Point> points=selectedRoute.getRoute();
-                        mMap.clear();
-                        MarkerOptions busMarker=new MarkerOptions();
-                        busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
-                        busMarker.position(
-                                new LatLng(
-                                        selectedRoute.getCurrentPosition().getLatitude(),
-                                        selectedRoute.getCurrentPosition().getLongitude()));
-                        currentDriverPosition=mMap.addMarker(busMarker);
-                        for (Point point : points) {
-                            MarkerOptions markerOptions=new MarkerOptions();
-                            markerOptions.position(new LatLng(point.getLatitude(),point.getLongitude()));
-                            mMap.addMarker(markerOptions);
-                        }
-
-                        List<String> urls = getDirectionsUrl(points);
-                        if (urls.size() > 1) {
-                            for (int i = 0; i < urls.size(); i++) {
-                                String url = urls.get(i);
-                                DownloadTask downloadTask = new DownloadTask();
-                                // Start downloading json data from Google Directions API
-                                downloadTask.execute(url);
-                            }
-                        }
-                    }
-                } else{
-                    drivernameText.setText(changedRoute.getDriverName());
-                    routeToUpdate.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            for(int i=0;i<routesList.getChildCount();i++){
-                                LinearLayout currentRouteOnList=(LinearLayout)routesList.getChildAt(i);
-                                currentRouteOnList.setBackgroundColor(View.INVISIBLE);
-                            }
-                            routeToUpdate.setBackgroundColor(Color.parseColor("#0000ff"));
-                            currentSelectedRoute=new HashMap<>();
-                            currentSelectedRoute.put(routeKey,changedRoute);
-                            Route selectedRoute=currentSelectedRoute.get(routeKey);
-                            ArrayList<Point> points=selectedRoute.getRoute();
-                            mMap.clear();
-                            MarkerOptions busMarker=new MarkerOptions();
-                            busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
-                            busMarker.position(
-                                    new LatLng(
-                                            selectedRoute.getCurrentPosition().getLatitude(),
-                                            selectedRoute.getCurrentPosition().getLongitude()));
-                            currentDriverPosition=mMap.addMarker(busMarker);
-                            for (Point point : points) {
-                                MarkerOptions markerOptions=new MarkerOptions();
-                                markerOptions.position(new LatLng(point.getLatitude(),point.getLongitude()));
-                                mMap.addMarker(markerOptions);
-                            }
-
-                            List<String> urls = getDirectionsUrl(points);
-                            if (urls.size() > 1) {
-                                for (int i = 0; i < urls.size(); i++) {
-                                    String url = urls.get(i);
-                                    DownloadTask downloadTask = new DownloadTask();
-                                    // Start downloading json data from Google Directions API
-                                    downloadTask.execute(url);
-                                }
-                            }
-
-
-
-                        }
-                    });
-                }
-                Toast.makeText(ClientMainActivity.this,"Updated route: #"+indexOfRoute+
-                                " with key: "+routeKey,
-                        Toast.LENGTH_SHORT).show();
+//                final Route changedRoute=dataSnapshot.getValue(Route.class);
+//                final String routeKey=dataSnapshot.getKey();
+//                int indexOfRoute=routes.indexOf(routeKey);
+//                final LinearLayout routeToUpdate = (LinearLayout)routesList.getChildAt(indexOfRoute);
+//                TextView drivernameText = (TextView)routeToUpdate.getChildAt(0);
+//
+//
+//
+//                Toast.makeText(ClientMainActivity.this,"Updated route: #"+indexOfRoute+
+//                                " with key: "+routeKey,
+//                        Toast.LENGTH_SHORT).show();
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                Route routeToRemove=dataSnapshot.getValue(Route.class);
-                String routeKey=dataSnapshot.getKey();
+                String routeKey = dataSnapshot.getKey();
+                int layoutToRemove = routes.indexOf(routeKey);
                 routes.remove(routeKey);
-                int routeToRemoveIndex=routes.indexOf(routeKey);
-                LinearLayout removedRoute=(LinearLayout)routesList.getChildAt(routeToRemoveIndex);
-                routesList.removeView(removedRoute);
-                if(routeToRemove.getDriverName().equals(currentSelectedRoute.get(routeKey).getDriverName())){
-                    currentSelectedRoute=null;
-                    mMap.clear();
-                }
-
+                LinearLayout layout= (LinearLayout) routesList.getChildAt(layoutToRemove);
+                routesList.removeView(layout);
             }
 
             @Override

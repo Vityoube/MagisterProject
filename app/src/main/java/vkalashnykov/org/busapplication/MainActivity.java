@@ -8,6 +8,7 @@ import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -22,8 +23,13 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -57,6 +63,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import vkalashnykov.org.busapplication.domain.Driver;
+import vkalashnykov.org.busapplication.domain.Point;
 import vkalashnykov.org.busapplication.domain.Route;
 
 @SuppressWarnings("deprecation")
@@ -70,20 +77,20 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-    private LocationManager locationManager;
-    private String provider;
+
     private String userEmail;
     private String driverName;
     private String driverKey;
-    private LatLng currentPlaceSelection=null;
+    private LatLng currentPlaceSelection = null;
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     GoogleMap mMap;
     private ArrayList<vkalashnykov.org.busapplication.domain.Point> markerPoints = new ArrayList();
     private boolean editMap = false;
-    final FirebaseDatabase database=FirebaseDatabase.getInstance();
+    final FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference driversRef;
     DatabaseReference routesRef;
+    private Location mLocation;
 
     @Override
     protected void onPause() {
@@ -107,18 +114,16 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         setContentView(R.layout.activity_driver_main);
 
 
-
         welcomeMessage = (TextView) findViewById(R.id.welcome);
-        userEmail=intent.getStringExtra("USER_EMAIL");
-        driverName=intent.getStringExtra("NAME");
+        userEmail = intent.getStringExtra("USER_EMAIL");
+        driverName = intent.getStringExtra("NAME");
         welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
-        driverKey=intent.getStringExtra("USER_KEY");
-        driversRef=database.getReference().child("drivers");
-        routesRef=database.getReference().child("routes");
+        driverKey = intent.getStringExtra("USER_KEY");
+        driversRef = database.getReference().child("drivers");
+        routesRef = database.getReference().child("routes");
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
 
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -130,7 +135,26 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(10 * 1000)        // 10 seconds, in milliseconds
-                .setFastestInterval(1 * 1000); // 1 second, in milliseconds
+                .setFastestInterval(1 * 1000);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        LocationSettingsRequest locationSettingsRequest = builder.build();
+
+        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+        settingsClient.checkLocationSettings(locationSettingsRequest);
+
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
+        }
+        LocationServices.getFusedLocationProviderClient(this).
+                requestLocationUpdates(mLocationRequest,new LocationCallback(){
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
+                        onLocationChanged(locationResult.getLastLocation());
+                    }
+                }, Looper.myLooper());
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -146,27 +170,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             }
         };
         routesRef.child(driverKey).child("driverName").setValue(driverName);
-//        driverListener=new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//
-//                for (DataSnapshot snapshot: dataSnapshot.getChildren()){
-//                    Driver driver=snapshot.getValue(Driver.class);
-//                    if(userEmail.equals(driver.getUsername()) ){
-//                        driverKey=snapshot.getKey();
-//                        if (firstTimeLoading) {
-//                            markerPoints = driver.getRoute();
-//                            firstTimeLoading = false;
-//                        }
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//                Toast.makeText(MainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT);
-//            }
-//        };
 
 
 
@@ -176,6 +179,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     protected void onResume() {
         super.onResume();
         mGoogleApiClient.connect();
+
     }
 
     @Override
@@ -206,39 +210,55 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     @Override
     public void onLocationChanged(Location location) {
-        handleNewLocation(location);
-
+        mLocation=location;
+        handleNewLocation();
 
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.i(BUS, "Location services connected.");
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
-
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         }
 
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        handleNewLocation();
 
-        if (location == null) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        } else {
-            handleNewLocation(location);
-        }
 
     }
 
-    private void handleNewLocation(Location location) {
-        Log.d(BUS, location.toString());
+    private void handleNewLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
-        double currentLatitude = location.getLatitude();
-        double currentLongitude = location.getLongitude();
-        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-        routesRef.child(driverKey).child("currentPosition").
-                setValue(new vkalashnykov.org.busapplication.domain.Point(currentLatitude,currentLongitude));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
+
+            if (mLocation == null) {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            } else {
+                Log.d(BUS, mLocation.toString());
+
+                final double currentLatitude = mLocation.getLatitude();
+                final double currentLongitude = mLocation.getLongitude();
+                LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+                routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Route route = dataSnapshot.getValue(Route.class);
+                        route.setCurrentPosition(new Point(currentLatitude, currentLongitude));
+                        routesRef.child(driverKey).setValue(route);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Toast.makeText(MainActivity.this,
+                                R.string.databaseError, Toast.LENGTH_SHORT).show();
+                    }
+                });
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
+            }
+        } else {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
+        }
     }
 
     @Override

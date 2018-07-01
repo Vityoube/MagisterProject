@@ -20,7 +20,6 @@ public class Route implements Serializable{
     public Route(String driverName, ArrayList<Point> route, Point currentPosition) {
         this.driverName = driverName;
         this.route = route;
-        this.currentPosition = currentPosition;
     }
 
     public String getDriverName() {

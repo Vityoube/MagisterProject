@@ -27,5 +27,11 @@
     <string name="create_account" >Utwórz konto</string>
     <string name="password2" >Powtórz Hasło</string>
     <string name="passwordsNotMatch">Hasła nie są takie same</string>
-    <string name="send_message">Wyślij wiadomość</string>
+    <string name="create_request">Złóż zamówienie</string>
+    <string name="request_to">Zamówienie do</string>
+    <string name="choose_location">Wybierz lokalizację</string>
+    <string name="send_request">Wyślij zamówienie</string>
+    <string name="comments">Komentarze</string>
+    <string name="request_success">Twoje zamówienie jest złożone pomyślnie</string>
+    <string name="provide_location">Zaznacz lokalizację</string>
 </resources>

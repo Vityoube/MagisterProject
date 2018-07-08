@@ -222,6 +222,12 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         }
+        if (mLocation == null) {
+                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+            } else {
+                LatLng latLng = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
+            }
 
         handleNewLocation();
 
@@ -254,7 +260,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                                 R.string.databaseError, Toast.LENGTH_SHORT).show();
                     }
                 });
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
             }
         } else {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);

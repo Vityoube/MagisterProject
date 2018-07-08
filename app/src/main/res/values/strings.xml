@@ -26,8 +26,13 @@
     <string name="create_account">Create Account</string>
     <string name="password2">Confirm Password</string>
     <string name="passwordsNotMatch">Passwords do not match</string>
-    <string name="send_message">Send Message</string>
+    <string name="create_request">Create request</string>
+    <string name="request_to">Request to</string>
+    <string name="choose_location">Choose location</string>
+    <string name="send_request">Send request</string>
+    <string name="comments">Comments</string>
+    <string name="request_success">Request created successfuly</string>
+    <string name="provide_location">Please provide location</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
 
 </resources>

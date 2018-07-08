@@ -11,24 +11,15 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.TextViewCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.Pair;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -66,10 +57,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import vkalashnykov.org.busapplication.domain.Client;
-import vkalashnykov.org.busapplication.domain.Driver;
 import vkalashnykov.org.busapplication.domain.Point;
 import vkalashnykov.org.busapplication.domain.Route;
 
@@ -88,13 +76,14 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
     String userKey;
     private GoogleMap mMap;
     private ArrayList<String> routes;
-    private Route currentRoute;
     private int currentRouteOnList=0;
     Route currentSelectedRoute;
     private LinearLayout routesList;
     private int routesListSize;
     private Marker currentDriverPosition;
     private String currentDriverKey;
+    private ArrayList<Marker> currentRoute;
+    private ArrayList<com.google.android.gms.maps.model.Polyline> currentRouteLines;
 
     public ClientMainActivity() {
         currentSelectedRoute = null;
@@ -111,10 +100,12 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
         welcome.setText(welcomeMessage);
         routes=new ArrayList<>();
         currentDriverPosition=null;
+        currentRoute=new ArrayList<>();
         routesList= (LinearLayout) findViewById(R.id.routesList);
         currentSelectedRoute=null;
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+        currentRouteLines=new ArrayList<>();
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -238,9 +229,6 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 final Route addedRoute=dataSnapshot.getValue(Route.class);
                 final String routeKey=dataSnapshot.getKey();
                 routes.add(dataSnapshot.getKey());
-
-                Toast.makeText(ClientMainActivity.this,"Added routes: "+routes.toString(),
-                        Toast.LENGTH_SHORT).show();
                 final LinearLayout routeLayout=new LinearLayout(ClientMainActivity.this);
                 routeLayout.setOrientation(LinearLayout.HORIZONTAL);
                 TextView driverName=new TextView(ClientMainActivity.this);
@@ -252,7 +240,19 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 LinearLayout.LayoutParams buttonParam=new LinearLayout.LayoutParams(0,
                         ViewGroup.LayoutParams.MATCH_PARENT,0.2f);
                 Button sendMessage=new Button(ClientMainActivity.this);
-                sendMessage.setText(R.string.send_message);
+                sendMessage.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent goToCreateRequestIntent=new Intent(ClientMainActivity.this,
+                                ClientCreateRequestActivity.class);
+                        goToCreateRequestIntent.putExtra("DRIVER_NAME",addedRoute.getDriverName());
+                        goToCreateRequestIntent.putExtra("CLIENT_KEY",userKey);
+                        goToCreateRequestIntent.putExtra("DRIVER_KEY",dataSnapshot.getKey());
+                        startActivity(goToCreateRequestIntent);
+
+                    }
+                });
+                sendMessage.setText(R.string.create_request);
                 routeLayout.addView(driverName,textParam);
                 routeLayout.addView(sendMessage,textParam);
                 routesListSize++;
@@ -293,29 +293,66 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                                             Toast.LENGTH_SHORT).show();
                                 }
                             });
+                            routesRef.child(routeKey).child("route").addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    if (currentDriverKey.equals(routeKey)){
+                                        ArrayList<Point> driverRoute=new ArrayList<>();
+                                        for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                                            Point driverRoutePoint=snapshot.getValue(Point.class);
+                                            driverRoute.add(driverRoutePoint);
+                                        }
+                                        if(currentRoute!=null && !currentRoute.isEmpty()){
+                                            for (Marker pointOnRoute: currentRoute){
+                                                    pointOnRoute.remove();
+                                                }
+                                        }
+                                        if (currentRouteLines!=null && !currentRouteLines.isEmpty()){
+                                            for (com.google.android.gms.maps.model.Polyline polyline :
+                                            currentRouteLines)
+                                                polyline.remove();
+
+                                        }
+                                        for ( Point point : driverRoute) {
+                                            MarkerOptions routeMarker=new MarkerOptions();
+                                            LatLng markerPosition=new LatLng(point.getLatitude(),
+                                            point.getLongitude());
+                                            routeMarker.position(markerPosition);
+                                            currentRoute.add(mMap.addMarker(routeMarker));
+                                            List<String> urls = getDirectionsUrl(driverRoute);
+                                            if (urls.size() > 1) {
+                                                for (int i = 0; i < urls.size(); i++) {
+                                                    String url = urls.get(i);
+                                                    DownloadTask downloadTask = new DownloadTask();
+                                                    // Start downloading json data from Google Directions API
+                                                    downloadTask.execute(url);
+                                                }
+                                            }
+                                        }
+
+                                    }
+
+
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+                                    Toast.makeText(ClientMainActivity.this,R.string.databaseError,
+                                            Toast.LENGTH_SHORT).show();
+                                }
+
+                            });
                         }
                     }
                 });
 
                 routesList.addView(routeLayout);
-//                routeLayout.addView(sendMessage, );
-//                routesList.get
 
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-//                final Route changedRoute=dataSnapshot.getValue(Route.class);
-//                final String routeKey=dataSnapshot.getKey();
-//                int indexOfRoute=routes.indexOf(routeKey);
-//                final LinearLayout routeToUpdate = (LinearLayout)routesList.getChildAt(indexOfRoute);
-//                TextView drivernameText = (TextView)routeToUpdate.getChildAt(0);
-//
-//
-//
-//                Toast.makeText(ClientMainActivity.this,"Updated route: #"+indexOfRoute+
-//                                " with key: "+routeKey,
-//                        Toast.LENGTH_SHORT).show();
+
             }
 
             @Override
@@ -458,7 +495,7 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 lineOptions.width(12);
                 lineOptions.color(Color.RED);
                 lineOptions.geodesic(true);
-                mMap.addPolyline(lineOptions);
+                currentRouteLines.add(mMap.addPolyline(lineOptions));
             }
 
 

@@ -58,8 +58,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import vkalashnykov.org.busapplication.domain.Point;
-import vkalashnykov.org.busapplication.domain.Route;
+import vkalashnykov.org.busapplication.api.domain.Client;
+import vkalashnykov.org.busapplication.api.domain.Point;
+import vkalashnykov.org.busapplication.api.domain.Route;
+import vkalashnykov.org.busapplication.api.util.DataParser;
+import vkalashnykov.org.busapplication.api.util.RoutesAPI;
 
 @SuppressWarnings("deprecation")
 public class ClientMainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
@@ -258,93 +261,101 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 routesListSize++;
                 routeLayout.setId(routesListSize);
                 routeLayout.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (routeLayout.getSolidColor()!=Color.BLUE){
+                                                   @Override
+                                                   public void onClick(View v) {
+                                                       if (routeLayout.getSolidColor() != Color.BLUE) {
+                                                           mMap.clear();
+                                                           for (int i = 0; i < routesList.getChildCount(); i++) {
+                                                               LinearLayout currentLayout = (LinearLayout) routesList.getChildAt(i);
+                                                               currentLayout.setBackgroundColor(Color.TRANSPARENT);
+                                                           }
+                                                           routeLayout.setBackgroundColor(Color.BLUE);
+                                                           DatabaseReference routeReference=routesRef.child(routeKey);
+                                                           final RoutesAPI routesAPI = RoutesAPI.getInstance();
+                                                           routesAPI.setContext(ClientMainActivity.this);
 
-                            for (int i=0;i<routesList.getChildCount();i++){
-                                LinearLayout currentLayout=(LinearLayout)routesList.getChildAt(i);
-                                currentLayout.setBackgroundColor(Color.TRANSPARENT);
-                            }
-                            routeLayout.setBackgroundColor(Color.BLUE);
-                            currentDriverKey=routeKey;
-                            routesRef.child(routeKey).child("currentPosition").addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    if (currentDriverKey.equals(routeKey)){
-                                        Point changedDriverPosition=dataSnapshot.getValue(Point.class);
-                                        if(currentDriverPosition!=null){
-                                            currentDriverPosition.remove();
-                                        }
-                                        LatLng driverLatLng=new LatLng(changedDriverPosition.getLatitude(),
-                                                changedDriverPosition.getLongitude());
-                                        MarkerOptions busMarker=new MarkerOptions();
-                                        busMarker.position(driverLatLng);
-                                        busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
-                                        currentDriverPosition=mMap.addMarker(busMarker);
-                                    }
-
-
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-                                    Toast.makeText(ClientMainActivity.this,R.string.databaseError,
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            });
-                            routesRef.child(routeKey).child("route").addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    if (currentDriverKey.equals(routeKey)){
-                                        ArrayList<Point> driverRoute=new ArrayList<>();
-                                        for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                                            Point driverRoutePoint=snapshot.getValue(Point.class);
-                                            driverRoute.add(driverRoutePoint);
-                                        }
-                                        if(currentRoute!=null && !currentRoute.isEmpty()){
-                                            for (Marker pointOnRoute: currentRoute){
-                                                    pointOnRoute.remove();
-                                                }
-                                        }
-                                        if (currentRouteLines!=null && !currentRouteLines.isEmpty()){
-                                            for (com.google.android.gms.maps.model.Polyline polyline :
-                                            currentRouteLines)
-                                                polyline.remove();
-
-                                        }
-                                        for ( Point point : driverRoute) {
-                                            MarkerOptions routeMarker=new MarkerOptions();
-                                            LatLng markerPosition=new LatLng(point.getLatitude(),
-                                            point.getLongitude());
-                                            routeMarker.position(markerPosition);
-                                            currentRoute.add(mMap.addMarker(routeMarker));
-                                            List<String> urls = getDirectionsUrl(driverRoute);
-                                            if (urls.size() > 1) {
-                                                for (int i = 0; i < urls.size(); i++) {
-                                                    String url = urls.get(i);
-                                                    DownloadTask downloadTask = new DownloadTask();
-                                                    // Start downloading json data from Google Directions API
-                                                    downloadTask.execute(url);
-                                                }
-                                            }
-                                        }
-
-                                    }
+                                                           routeReference.child("currentPosition").addValueEventListener(new ValueEventListener() {
+                                                               @Override
+                                                               public void onDataChange(DataSnapshot dataSnapshot) {
+                                                                   if (currentDriverKey.equals(routeKey)){
+                                                                       Point changedDriverPosition=dataSnapshot.getValue(Point.class);
+                                                                       if(currentDriverPosition!=null){
+                                                                           currentDriverPosition.remove();
+                                                                       }
+                                                                       LatLng driverLatLng=new LatLng(changedDriverPosition.getLatitude(),
+                                                                               changedDriverPosition.getLongitude());
+                                                                       MarkerOptions busMarker=new MarkerOptions();
+                                                                       busMarker.position(driverLatLng);
+                                                                       busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
+                                                                       currentDriverPosition=mMap.addMarker(busMarker);
+                                                                   }
 
 
-                                }
+                                                               }
 
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-                                    Toast.makeText(ClientMainActivity.this,R.string.databaseError,
-                                            Toast.LENGTH_SHORT).show();
-                                }
+                                                               @Override
+                                                               public void onCancelled(DatabaseError databaseError) {
+                                                                   Toast.makeText(ClientMainActivity.this,R.string.databaseError,
+                                                                           Toast.LENGTH_SHORT).show();
+                                                               }
+                                                           });
+                                                           routeReference.child("route").addValueEventListener(new ValueEventListener() {
+                                                               @Override
+                                                               public void onDataChange(DataSnapshot dataSnapshot) {
+                                                                   if (currentDriverKey.equals(routeKey)){
+                                                                       ArrayList<Point> driverRoute=new ArrayList<>();
+                                                                       for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                                                                           Point driverRoutePoint=snapshot.getValue(Point.class);
+                                                                           driverRoute.add(driverRoutePoint);
+                                                                       }
+                                                                       if(currentRoute!=null && !currentRoute.isEmpty()){
+                                                                           for (Marker pointOnRoute: currentRoute){
+                                                                               pointOnRoute.remove();
+                                                                           }
+                                                                       }
+                                                                       if (currentRouteLines!=null && !currentRouteLines.isEmpty()){
+                                                                           for (com.google.android.gms.maps.model.Polyline polyline :
+                                                                                   currentRouteLines)
+                                                                               polyline.remove();
 
-                            });
-                        }
-                    }
-                });
+                                                                       }
+                                                                       for ( Point point : driverRoute) {
+                                                                           MarkerOptions routeMarker=new MarkerOptions();
+                                                                           LatLng markerPosition=new LatLng(point.getLatitude(),
+                                                                                   point.getLongitude());
+                                                                           routeMarker.position(markerPosition);
+                                                                           currentRoute.add(mMap.addMarker(routeMarker));
+                                                                       }
+                                                                       routesAPI.downloadRoute(driverRoute);
+                                                                       MarkerOptions markerOptions = new MarkerOptions();
+                                                                       for (vkalashnykov.org.busapplication.api.domain.Point point : routesAPI.getMarkerPoints()) {
+                                                                           LatLng marker=new LatLng(point.getLatitude(),point.getLongitude());
+                                                                           markerOptions.position(marker);
+                                                                           currentRoute.add(mMap.addMarker(markerOptions));
+                                                                       }
+
+                                                                       for (PolylineOptions polylineOptions : routesAPI.getPolylines()){
+                                                                           mMap.addPolyline(polylineOptions);
+                                                                       }
+
+
+
+                                                                   }
+
+
+                                                               }
+
+                                                               @Override
+                                                               public void onCancelled(DatabaseError databaseError) {
+                                                                   Toast.makeText(ClientMainActivity.this,R.string.databaseError,
+                                                                           Toast.LENGTH_SHORT).show();
+                                                               }
+
+                                                           });
+
+                                                       }
+                                                   }
+                                               });
 
                 routesList.addView(routeLayout);
 
@@ -360,6 +371,7 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 String routeKey = dataSnapshot.getKey();
                 int layoutToRemove = routes.indexOf(routeKey);
                 routes.remove(routeKey);
+                mMap.clear();
                 LinearLayout layout= (LinearLayout) routesList.getChildAt(layoutToRemove);
                 routesList.removeView(layout);
             }
@@ -391,149 +403,149 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
                 Toast.LENGTH_SHORT).show();
     }
 
-    private List<String> getDirectionsUrl(ArrayList<vkalashnykov.org.busapplication.domain.Point> markerPoints) {
-        List<String> mUrls = new ArrayList<>();
-        if (markerPoints.size() > 1) {
-            String str_origin = markerPoints.get(0).getLatitude() + "," + markerPoints.get(0).getLongitude();
-            String str_dest = markerPoints.get(1).getLatitude()  + "," + markerPoints.get(1).getLongitude();
-
-            String sensor = "sensor=false";
-            String parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
-            String output = "json";
-            String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-
-            mUrls.add(url);
-            for (int i = 2; i < markerPoints.size(); i++)//loop starts from 2 because 0 and 1 are already printed
-            {
-                str_origin = str_dest;
-                str_dest = markerPoints.get(i).getLatitude()  + "," + markerPoints.get(i).getLongitude();
-                parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
-                url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-                mUrls.add(url);
-            }
-        }
-
-        return mUrls;
-    }
-
-    private class DownloadTask extends AsyncTask<String, Void, String> {
-
-        @Override
-        protected String doInBackground(String... url) {
-
-            String data = "";
-
-            try {
-                data = downloadUrl(url[0]);
-            } catch (Exception e) {
-                Log.d("Background Task", e.toString());
-            }
-            return data;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            ParserTask parserTask = new ParserTask();
-
-
-            parserTask.execute(result);
-
-        }
-    }
-
-    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String,String>>>> {
-
-        // Parsing the data in non-ui thread
-        @Override
-        protected List<List<HashMap<String,String>>> doInBackground(String... jsonData) {
-
-            JSONObject jObject;
-            List<List<HashMap<String, String>>> routes = null;
-
-            try {
-                jObject = new JSONObject(jsonData[0]);
-                Log.d("ParserTask",jsonData[0].toString());
-                DataParser parser = new DataParser();
-                Log.d("ParserTask", parser.toString());
-
-                // Starts parsing data
-                routes = parser.parse(jObject);
-                Log.d("ParserTask","Executing routes");
-                Log.d("ParserTask",routes.toString());
-
-            } catch (Exception e) {
-                Log.d("ParserTask",e.toString());
-                e.printStackTrace();
-            }
-            return routes;
-        }
-
-        @Override
-        protected void onPostExecute(List<List<HashMap<String,String>>> result) {
-
-            for (int i = 0; i < result.size(); i++) {
-                ArrayList points = new ArrayList();
-                PolylineOptions lineOptions= new PolylineOptions();
-
-                List<HashMap<String,String>> path = result.get(i);
-
-                for (int j = 0; j < path.size(); j++) {
-                    HashMap<String,String> point = path.get(j);
-
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-
-                    points.add(position);
-                }
-
-
-
-                lineOptions.addAll(points);
-                lineOptions.width(12);
-                lineOptions.color(Color.RED);
-                lineOptions.geodesic(true);
-                currentRouteLines.add(mMap.addPolyline(lineOptions));
-            }
-
-
-        }
-    }
-
-    public String downloadUrl(String strUrl) throws IOException {
-        String data = "";
-        InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
-        try {
-            URL url = new URL(strUrl);
-
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            urlConnection.connect();
-
-            iStream = urlConnection.getInputStream();
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
-            StringBuffer sb = new StringBuffer();
-
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-            data = sb.toString();
-
-            br.close();
-
-        } catch (Exception e) {
-            Log.d("Exception", e.toString());
-        } finally {
-            iStream.close();
-            urlConnection.disconnect();
-        }
-        return data;
-    }
+//    private List<String> getDirectionsUrl(ArrayList<vkalashnykov.org.busapplication.api.domain.Point> markerPoints) {
+//        List<String> mUrls = new ArrayList<>();
+//        if (markerPoints.size() > 1) {
+//            String str_origin = markerPoints.get(0).getLatitude() + "," + markerPoints.get(0).getLongitude();
+//            String str_dest = markerPoints.get(1).getLatitude()  + "," + markerPoints.get(1).getLongitude();
+//
+//            String sensor = "sensor=false";
+//            String parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
+//            String output = "json";
+//            String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+//
+//            mUrls.add(url);
+//            for (int i = 2; i < markerPoints.size(); i++)//loop starts from 2 because 0 and 1 are already printed
+//            {
+//                str_origin = str_dest;
+//                str_dest = markerPoints.get(i).getLatitude()  + "," + markerPoints.get(i).getLongitude();
+//                parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
+//                url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
+//                mUrls.add(url);
+//            }
+//        }
+//
+//        return mUrls;
+//    }
+//
+//    private class DownloadTask extends AsyncTask<String, Void, String> {
+//
+//        @Override
+//        protected String doInBackground(String... url) {
+//
+//            String data = "";
+//
+//            try {
+//                data = downloadUrl(url[0]);
+//            } catch (Exception e) {
+//                Log.d("Background Task", e.toString());
+//            }
+//            return data;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            super.onPostExecute(result);
+//
+//            ParserTask parserTask = new ParserTask();
+//
+//
+//            parserTask.execute(result);
+//
+//        }
+//    }
+//
+//    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String,String>>>> {
+//
+//        // Parsing the data in non-ui thread
+//        @Override
+//        protected List<List<HashMap<String,String>>> doInBackground(String... jsonData) {
+//
+//            JSONObject jObject;
+//            List<List<HashMap<String, String>>> routes = null;
+//
+//            try {
+//                jObject = new JSONObject(jsonData[0]);
+//                Log.d("ParserTask",jsonData[0].toString());
+//                DataParser parser = new DataParser();
+//                Log.d("ParserTask", parser.toString());
+//
+//                // Starts parsing data
+//                routes = parser.parse(jObject);
+//                Log.d("ParserTask","Executing routes");
+//                Log.d("ParserTask",routes.toString());
+//
+//            } catch (Exception e) {
+//                Log.d("ParserTask",e.toString());
+//                e.printStackTrace();
+//            }
+//            return routes;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(List<List<HashMap<String,String>>> result) {
+//
+//            for (int i = 0; i < result.size(); i++) {
+//                ArrayList points = new ArrayList();
+//                PolylineOptions lineOptions= new PolylineOptions();
+//
+//                List<HashMap<String,String>> path = result.get(i);
+//
+//                for (int j = 0; j < path.size(); j++) {
+//                    HashMap<String,String> point = path.get(j);
+//
+//                    double lat = Double.parseDouble(point.get("lat"));
+//                    double lng = Double.parseDouble(point.get("lng"));
+//                    LatLng position = new LatLng(lat, lng);
+//
+//                    points.add(position);
+//                }
+//
+//
+//
+//                lineOptions.addAll(points);
+//                lineOptions.width(12);
+//                lineOptions.color(Color.RED);
+//                lineOptions.geodesic(true);
+//                currentRouteLines.add(mMap.addPolyline(lineOptions));
+//            }
+//
+//
+//        }
+//    }
+//
+//    public String downloadUrl(String strUrl) throws IOException {
+//        String data = "";
+//        InputStream iStream = null;
+//        HttpURLConnection urlConnection = null;
+//        try {
+//            URL url = new URL(strUrl);
+//
+//            urlConnection = (HttpURLConnection) url.openConnection();
+//
+//            urlConnection.connect();
+//
+//            iStream = urlConnection.getInputStream();
+//
+//            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
+//
+//            StringBuffer sb = new StringBuffer();
+//
+//            String line = "";
+//            while ((line = br.readLine()) != null) {
+//                sb.append(line);
+//            }
+//
+//            data = sb.toString();
+//
+//            br.close();
+//
+//        } catch (Exception e) {
+//            Log.d("Exception", e.toString());
+//        } finally {
+//            iStream.close();
+//            urlConnection.disconnect();
+//        }
+//        return data;
+//    }
 }

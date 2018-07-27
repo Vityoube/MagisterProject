@@ -5,14 +5,11 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
-import android.os.Looper;
-import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -22,13 +19,9 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -52,17 +45,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import vkalashnykov.org.busapplication.domain.Point;
-import vkalashnykov.org.busapplication.domain.Request;
+import vkalashnykov.org.busapplication.api.domain.Point;
+import vkalashnykov.org.busapplication.api.domain.Request;
+import vkalashnykov.org.busapplication.api.domain.Route;
+import vkalashnykov.org.busapplication.api.util.RoutesAPI;
 
 public class ClientCreateRequestActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,LocationListener, OnMapReadyCallback {
@@ -80,6 +73,8 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
     private String intentDriverName;
     private String clientKey,driverKey;
     private LatLng currentPlaceSelection;
+    private ArrayList<Marker> currentRoute;
+    private ArrayList<com.google.android.gms.maps.model.Polyline> currentRouteLines;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,6 +142,33 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
 
         }
         googleMap.setMyLocationEnabled(true);
+        DatabaseReference routeReference=database.getReference().
+                child("routes").child(driverKey);
+        routeReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (currentRoute!=null && !currentRoute.isEmpty()){
+                    while (!currentRoute.isEmpty()){
+                        Marker marker=currentRoute.get(0);
+                        marker.remove();
+                        currentRoute.remove(marker);
+                    }
+                }
+                currentRoute=new ArrayList<>();
+                Route driverRoute=dataSnapshot.getValue(Route.class);
+                for (Point point: driverRoute.getRoute()){
+                    MarkerOptions routeMarker =new MarkerOptions();
+                    routeMarker.position(new LatLng(point.getLatitude(),point.getLongitude()));
+                    currentRoute.add(googleMap.addMarker(routeMarker));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(ClientCreateRequestActivity.this,R.string.databaseError,
+                        Toast.LENGTH_SHORT).show();
+            }
+        });
         googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
@@ -218,9 +240,9 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
             comments= commentsText.getText().toString();
             SimpleDateFormat df=new SimpleDateFormat("yyyy.MM.dd G 'at' HH:mm:ss z");
             String currentDate=df.format(new Date());
-            ArrayList<vkalashnykov.org.busapplication.domain.Message> messages=new ArrayList<>();
+            ArrayList<vkalashnykov.org.busapplication.api.domain.Message> messages=new ArrayList<>();
             if (!comments.isEmpty()){
-                messages.add(new vkalashnykov.org.busapplication.domain.Message(comments,currentDate));
+                messages.add(new vkalashnykov.org.busapplication.api.domain.Message(comments,currentDate));
             }
             DatabaseReference requestsReference=database.getReference().child("requests");
 

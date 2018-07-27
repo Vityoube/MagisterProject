@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -24,12 +23,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.util.ArrayList;
-
-import vkalashnykov.org.busapplication.domain.Client;
-import vkalashnykov.org.busapplication.domain.Driver;
-import vkalashnykov.org.busapplication.domain.Point;
-import vkalashnykov.org.busapplication.domain.Route;
+import vkalashnykov.org.busapplication.api.domain.Client;
+import vkalashnykov.org.busapplication.api.domain.Driver;
+import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class LoginActivity extends AppCompatActivity {
 

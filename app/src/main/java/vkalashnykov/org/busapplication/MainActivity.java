@@ -6,8 +6,8 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -23,7 +23,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -62,13 +61,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import vkalashnykov.org.busapplication.domain.Driver;
-import vkalashnykov.org.busapplication.domain.Point;
-import vkalashnykov.org.busapplication.domain.Route;
+import vkalashnykov.org.busapplication.api.domain.Point;
+import vkalashnykov.org.busapplication.api.domain.Route;
+import vkalashnykov.org.busapplication.api.util.DataParser;
+import vkalashnykov.org.busapplication.api.util.RoutesAPI;
 
 @SuppressWarnings("deprecation")
-public class MainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener, OnMapReadyCallback {
+public class MainActivity extends FragmentActivity{
 
 
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -85,20 +84,18 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     GoogleMap mMap;
-    private ArrayList<vkalashnykov.org.busapplication.domain.Point> markerPoints = new ArrayList();
+    private ArrayList<vkalashnykov.org.busapplication.api.domain.Point> markerPoints = new ArrayList();
     private boolean editMap = false;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference driversRef;
     DatabaseReference routesRef;
-    private Location mLocation;
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (mGoogleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-            mGoogleApiClient.disconnect();
-        }
+//        if (mGoogleApiClient.isConnected()) {
+//            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+//            mGoogleApiClient.disconnect();
+//        }
     }
 
     Marker mCurrLocationMarker;
@@ -119,42 +116,40 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         driverName = intent.getStringExtra("NAME");
         welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
         driverKey = intent.getStringExtra("USER_KEY");
-        driversRef = database.getReference().child("drivers");
         routesRef = database.getReference().child("routes");
 
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
 
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .addApi(Places.PLACE_DETECTION_API)
-                .build();
-        mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
-                .setFastestInterval(1 * 1000);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
-        LocationSettingsRequest locationSettingsRequest = builder.build();
-
-        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
-        settingsClient.checkLocationSettings(locationSettingsRequest);
-
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
-        }
-        LocationServices.getFusedLocationProviderClient(this).
-                requestLocationUpdates(mLocationRequest,new LocationCallback(){
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-                        onLocationChanged(locationResult.getLastLocation());
-                    }
-                }, Looper.myLooper());
+//        mGoogleApiClient = new GoogleApiClient.Builder(this)
+//                .addConnectionCallbacks(this)
+//                .addOnConnectionFailedListener(this)
+//                .addApi(LocationServices.API)
+//                .addApi(Places.PLACE_DETECTION_API)
+//                .build();
+//        mLocationRequest = LocationRequest.create()
+//                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+//                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
+//                .setFastestInterval(1 * 1000);
+//
+//        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+//        builder.addLocationRequest(mLocationRequest);
+//        LocationSettingsRequest locationSettingsRequest = builder.build();
+//
+//        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+//        settingsClient.checkLocationSettings(locationSettingsRequest);
+//
+//
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
+//        }
+//        LocationServices.getFusedLocationProviderClient(this).
+//                requestLocationUpdates(mLocationRequest,new LocationCallback(){
+//                    @Override
+//                    public void onLocationResult(LocationResult locationResult) {
+//                        onLocationChanged(locationResult.getLastLocation());
+//                    }
+//                }, Looper.myLooper());
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -178,8 +173,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     @Override
     protected void onResume() {
         super.onResume();
-        mGoogleApiClient.connect();
-
+//        mGoogleApiClient.connect();
     }
 
     @Override
@@ -208,142 +202,31 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
                 Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        mLocation=location;
-        handleNewLocation();
+
+
+    private void handleNewLocation(Location location) {
+
+
+//        final double currentLatitude = location.getLatitude();
+//        final double currentLongitude = location.getLongitude();
+//        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+//        routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                Route route = dataSnapshot.getValue(Route.class);
+//                route.setCurrentPosition(new Point(currentLatitude, currentLongitude));
+//                routesRef.child(driverKey).setValue(route);
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Toast.makeText(MainActivity.this,
+//                        R.string.databaseError, Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
     }
 
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.i(BUS, "Location services connected.");
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        }
-        if (mLocation == null) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-            } else {
-                LatLng latLng = new LatLng(mLocation.getLatitude(),mLocation.getLongitude());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
-            }
-
-        handleNewLocation();
-
-
-    }
-
-    private void handleNewLocation() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-
-
-            if (mLocation == null) {
-                LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-            } else {
-                Log.d(BUS, mLocation.toString());
-
-                final double currentLatitude = mLocation.getLatitude();
-                final double currentLongitude = mLocation.getLongitude();
-                LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-                routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Route route = dataSnapshot.getValue(Route.class);
-                        route.setCurrentPosition(new Point(currentLatitude, currentLongitude));
-                        routesRef.child(driverKey).setValue(route);
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Toast.makeText(MainActivity.this,
-                                R.string.databaseError, Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
-        } else {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-        Log.i(BUS, "Location services suspended. Please reconnect.");
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        if (connectionResult.hasResolution()) {
-            try {
-                // Start an Activity that tries to resolve the error
-                connectionResult.startResolutionForResult(this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
-            }
-        } else {
-            Log.i(BUS, "Location services connection failed with code " + connectionResult.getErrorCode());
-        }
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
-
-        }
-        mMap.setMyLocationEnabled(true);
-
-        routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                        Route route=dataSnapshot.getValue(Route.class);
-                        markerPoints=route.getRoute();
-                        MarkerOptions markerOptions = new MarkerOptions();
-                        for (vkalashnykov.org.busapplication.domain.Point point : markerPoints) {
-                            LatLng marker=new LatLng(point.getLatitude(),point.getLongitude());
-                            markerOptions.position(marker);
-                            mMap.addMarker(markerOptions);
-                        }
-
-                        List<String> urls = getDirectionsUrl(markerPoints);
-                        if (urls.size() > 1) {
-                            for (int i = 0; i < urls.size(); i++) {
-                                String url = urls.get(i);
-                                DownloadTask downloadTask = new DownloadTask();
-                                // Start downloading json data from Google Directions API
-                                downloadTask.execute(url);
-                            }
-                        }
-            }
-
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(MainActivity.this,
-                        R.string.databaseError,Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
-            @Override
-            public void onMapClick(LatLng latLng) {
-                if (editMap) {
-                    String apiKey="AIzaSyAcwyEytYneiCAeth4iXI8iMyatyHUkN5U";
-                    String placeUrl="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+
-                            latLng.latitude+","+latLng.longitude+"&radius=10&type=bus_station&key="+apiKey;
-                    String data="";
-                    currentPlaceSelection=latLng;
-                    CallPlacesAPI callPlacesAPI=new CallPlacesAPI();
-                    callPlacesAPI.execute(placeUrl);
-                }
-            }
-        });
-
-    }
 
     public void setEditRoute(View view) {
         Button button = (Button) findViewById(R.id.editButton);
@@ -384,252 +267,5 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     }
 
-    private class DownloadTask extends AsyncTask<String, Void, String> {
 
-        @Override
-        protected String doInBackground(String... url) {
-
-            String data = "";
-
-            try {
-                data = downloadUrl(url[0]);
-            } catch (Exception e) {
-                Log.d("Background Task", e.toString());
-            }
-            return data;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-
-            ParserTask parserTask = new ParserTask();
-
-
-            parserTask.execute(result);
-
-        }
-    }
-
-    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String,String>>>> {
-
-        // Parsing the data in non-ui thread
-        @Override
-        protected List<List<HashMap<String,String>>> doInBackground(String... jsonData) {
-
-            JSONObject jObject;
-            List<List<HashMap<String, String>>> routes = null;
-
-            try {
-                jObject = new JSONObject(jsonData[0]);
-                Log.d("ParserTask",jsonData[0].toString());
-                DataParser parser = new DataParser();
-                Log.d("ParserTask", parser.toString());
-
-                // Starts parsing data
-                routes = parser.parse(jObject);
-                Log.d("ParserTask","Executing routes");
-                Log.d("ParserTask",routes.toString());
-
-            } catch (Exception e) {
-                Log.d("ParserTask",e.toString());
-                e.printStackTrace();
-            }
-            return routes;
-        }
-
-        @Override
-        protected void onPostExecute(List<List<HashMap<String,String>>> result) {
-
-            for (int i = 0; i < result.size(); i++) {
-                ArrayList points = new ArrayList();
-                PolylineOptions lineOptions= new PolylineOptions();
-
-                List<HashMap<String,String>> path = result.get(i);
-
-                for (int j = 0; j < path.size(); j++) {
-                    HashMap<String,String> point = path.get(j);
-
-                    double lat = Double.parseDouble(point.get("lat"));
-                    double lng = Double.parseDouble(point.get("lng"));
-                    LatLng position = new LatLng(lat, lng);
-
-                    points.add(position);
-                }
-
-
-
-                lineOptions.addAll(points);
-                lineOptions.width(12);
-                lineOptions.color(Color.RED);
-                lineOptions.geodesic(true);
-                mMap.addPolyline(lineOptions);
-            }
-
-
-        }
-    }
-
-
-
-    public String downloadUrl(String strUrl) throws IOException {
-        String data = "";
-        InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
-        try {
-            URL url = new URL(strUrl);
-
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            urlConnection.connect();
-
-            iStream = urlConnection.getInputStream();
-
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
-            StringBuffer sb = new StringBuffer();
-
-            String line = "";
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
-            }
-
-            data = sb.toString();
-
-            br.close();
-
-        } catch (Exception e) {
-            Log.d("Exception", e.toString());
-        } finally {
-            iStream.close();
-            urlConnection.disconnect();
-        }
-        return data;
-    }
-    private List<String> getDirectionsUrl(ArrayList<vkalashnykov.org.busapplication.domain.Point> markerPoints) {
-        List<String> mUrls = new ArrayList<>();
-        if (markerPoints.size() > 1) {
-            String str_origin = markerPoints.get(0).getLatitude() + "," + markerPoints.get(0).getLongitude();
-            String str_dest = markerPoints.get(1).getLatitude()  + "," + markerPoints.get(1).getLongitude();
-
-            String sensor = "sensor=false";
-            String parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
-            String output = "json";
-            String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-
-            mUrls.add(url);
-            for (int i = 2; i < markerPoints.size(); i++)//loop starts from 2 because 0 and 1 are already printed
-            {
-                str_origin = str_dest;
-                str_dest = markerPoints.get(i).getLatitude()  + "," + markerPoints.get(i).getLongitude();
-                parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
-                url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-                mUrls.add(url);
-            }
-        }
-
-        return mUrls;
-    }
-    private class CallPlacesAPI extends AsyncTask<String,String,String>{
-
-
-
-        @Override
-        protected String doInBackground(String... strings) {
-            String data=null;
-            try {
-                data=sendRequest(strings[0]);
-
-            } catch (IOException e) {
-                Log.d("PlacesAPI",e.toString());
-            }
-            return data;
-        }
-
-        @Override
-        protected void onPostExecute(String response) {
-            super.onPostExecute(response);
-            try {
-                JSONObject placeResponse=new JSONObject(response);
-                if(!"ZERO_RESULTS".equals(placeResponse.get("status")) ){
-                    vkalashnykov.org.busapplication.domain.Point pointToAdd=
-                            new vkalashnykov.org.busapplication.domain.Point(
-                            currentPlaceSelection.latitude,
-                            currentPlaceSelection.longitude
-                    );
-                    if (markerPoints==null)
-                        markerPoints=new ArrayList<>();
-                    MarkerOptions markerOptions = new MarkerOptions();
-                    markerOptions.position(currentPlaceSelection);
-                    Marker marker = mMap.addMarker(markerOptions);
-                    boolean isToRemove=false;
-                    int index=0;
-                    DecimalFormat df = new DecimalFormat("#.###");
-                    df.setRoundingMode(RoundingMode.FLOOR);
-                    for(vkalashnykov.org.busapplication.domain.Point point : markerPoints){
-                        if (df.format(point.getLatitude()).equals(df.format(pointToAdd.getLatitude()))
-                                && df.format(point.getLongitude()).equals(df.format(pointToAdd.getLongitude()))){
-                            isToRemove=true;
-                            index=markerPoints.indexOf(point);
-                        }
-                    }
-                    if (isToRemove) {
-                        markerPoints.remove(index);
-                       mMap.clear();
-                       for (vkalashnykov.org.busapplication.domain.Point point : markerPoints){
-                           LatLng latLng=new LatLng(point.getLatitude(),point.getLongitude());
-                           markerOptions.position(latLng);
-                           mMap.addMarker(markerOptions);
-                       }
-
-                    }
-                    else {
-                        markerPoints.add(pointToAdd);
-                    }
-
-
-
-                    List<String> urls = getDirectionsUrl(markerPoints);
-                    if (urls.size() > 1) {
-                        for (int i = 0; i < urls.size(); i++) {
-                            String url = urls.get(i);
-                            DownloadTask downloadTask = new DownloadTask();
-                            // Start downloading json data from Google Directions API
-                            downloadTask.execute(url);
-                        }
-                    }
-                }
-            } catch (JSONException e){
-                Log.d("PlacesAPI",e.toString());
-            }
-        }
-    }
-
-
-    public String sendRequest(String uri) throws IOException{
-        InputStream iStream = null;
-        HttpURLConnection urlConnection = null;
-        String data=null;
-        try {
-            URL url=new URL(uri);
-            urlConnection= (HttpURLConnection) url.openConnection();
-            iStream=urlConnection.getInputStream();
-            StringBuffer sb=new StringBuffer();
-            BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-            String line="";
-            while((line=br.readLine())!=null){
-                sb.append(line);
-            }
-            data=sb.toString();
-            br.close();
-
-        } catch (Exception e) {
-            Log.d("Exception", e.toString());
-        } finally {
-            iStream.close();
-            urlConnection.disconnect();
-        }
-        Log.d("PLACES_API",data);
-        return data;
-    }
 }

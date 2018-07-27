@@ -11,7 +11,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import vkalashnykov.org.busapplication.domain.Driver;
+import vkalashnykov.org.busapplication.api.domain.Driver;
 
 public class UserDetailsActivity extends AppCompatActivity {
 

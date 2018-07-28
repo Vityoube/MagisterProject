@@ -34,4 +34,6 @@
     <string name="comments">Komentarze</string>
     <string name="request_success">Twoje zamówienie jest złożone pomyślnie</string>
     <string name="provide_location">Zaznacz lokalizację</string>
+    <string name="save_route">Zapis trasę</string>
+    <string name="prompt_exit">Naciśnij jeszcze raz, żeby wyjść</string>
 </resources>

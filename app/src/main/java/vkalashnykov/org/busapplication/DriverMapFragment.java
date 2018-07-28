@@ -7,12 +7,15 @@ import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -43,8 +46,13 @@ import com.google.firebase.database.ValueEventListener;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.RoundingMode;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,12 +72,13 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
     private LatLng currentPlaceSelection = null;
     private ArrayList<Point> markerPoints = new ArrayList();
     private  String currentDriverKey;
-    private ArrayList<Marker> markers;
+    private ArrayList<Marker> markers=new ArrayList<>();
     private ArrayList<Polyline> polylines=new ArrayList<>();
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     GoogleMap mMap;
     private DatabaseReference currentRouteRef;
+    Button saveButton;
 
 
 
@@ -92,7 +101,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
         } else {
             handleNewLocation(location);
             LatLng currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 14));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 16));
         }
     }
 
@@ -113,7 +122,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
+        this.mMap = googleMap;
         if (ContextCompat.checkSelfPermission(this.getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
 
@@ -127,18 +136,82 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
             @Override
             public void onMapClick(LatLng latLng) {
                 currentPlaceSelection=latLng;
+
+                for (Marker marker : markers){
+                    Location markerLocation=new Location("");
+                    markerLocation.setLatitude(marker.getPosition().latitude);
+                    markerLocation.setLongitude(marker.getPosition().longitude);
+                    Location currentSelectionLocation=new Location("");
+                    currentSelectionLocation.setLongitude(currentPlaceSelection.longitude);
+                    currentSelectionLocation.setLatitude(currentPlaceSelection.latitude);
+                    if(markerLocation.distanceTo(currentSelectionLocation)<=20){
+                        return;
+                    }
+                }
                 String apiKey="AIzaSyAcwyEytYneiCAeth4iXI8iMyatyHUkN5U";
                 final String placeUrl="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+
                         latLng.latitude+","+latLng.longitude+"&radius=10&type=bus_station&key="+apiKey;
                 CallPlacesAPI callPlacesAPI=new CallPlacesAPI();
                 callPlacesAPI.execute(placeUrl);
+                saveButton.setVisibility(View.VISIBLE);
+                saveButton.setText(R.string.save_route);
 
             }
         });
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                double latitude=marker.getPosition().latitude;
+                double longitude=marker.getPosition().longitude;
+                marker.remove();
+                int index=markers.indexOf(marker);
+                markers.remove(index);
+                markerPoints=new ArrayList<>();
+                for (Marker markerPoint : markers){
+                    Point point=new Point(markerPoint.getPosition().latitude,markerPoint.getPosition().longitude);
+                    markerPoints.add(point);
+                }
+                for (Polyline polyline : polylines){
+                    polyline.remove();
+                }
+                polylines.clear();
+                List<String> urls = new URLUtil().getDirectionsUrl(markerPoints);
+                if (urls.size() > 0) {
+                    for (int i = 0; i < urls.size(); i++) {
+                        String url = urls.get(i);
+                        DownloadTask downloadTask = new DownloadTask();
+                        // Start downloading json data from Google Directions API
+                        try {
+                            downloadTask.execute(url).get();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        } catch (ExecutionException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                saveButton.setVisibility(View.VISIBLE);
+                saveButton.setText(R.string.save_route);
+                return false;
+            }
+        });
+        saveButton= (Button) getActivity().findViewById(R.id.saveButton);
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                saveRoute();
+            }
+        });
+
+    }
+
+    private void saveRoute() {
+        currentRouteRef.child("route").setValue(markerPoints);
+        saveButton.setVisibility(View.INVISIBLE);
     }
 
     private void getRouteFromDatabase() {
-        currentRouteRef.addValueEventListener(new ValueEventListener() {
+        currentRouteRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Route route=dataSnapshot.getValue(Route.class);
@@ -149,8 +222,8 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
                     markers.add(mMap.addMarker(options));
                 }
 
-                List<String> urls = URLUtil.getDirectionsUrl(markerPoints);
-                if (urls.size() > 1) {
+                List<String> urls = new URLUtil().getDirectionsUrl(markerPoints);
+                if (urls.size() > 0) {
                     for (int i = 0; i < urls.size(); i++) {
                         String url = urls.get(i);
                         DownloadTask downloadTask = new DownloadTask();
@@ -189,6 +262,8 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
                 .setInterval(10 * 1000)        // 10 seconds, in milliseconds
                 .setFastestInterval(1 * 1000);
 
+        getMapAsync(this);
+
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
         builder.addLocationRequest(mLocationRequest);
         LocationSettingsRequest locationSettingsRequest = builder.build();
@@ -219,10 +294,10 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
     @Override
     public void onPause() {
         super.onPause();
-//        if (mGoogleApiClient.isConnected()) {
-//            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-//            mGoogleApiClient.disconnect();
-//        }
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
     }
 
     @Override
@@ -262,7 +337,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
             String data = "";
 
             try {
-                data = URLUtil.downloadUrl(url[0]);
+                data = new URLUtil().downloadUrl(url[0]);
             } catch (Exception e) {
                 Log.d("Background Task", e.toString());
             }
@@ -271,6 +346,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
 
         @Override
         protected void onPostExecute(String result) {
+//            Debug.waitForDebugger();
             super.onPostExecute(result);
 
             ParserTask parserTask = new ParserTask();
@@ -310,7 +386,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
 
         @Override
         protected void onPostExecute(List<List<HashMap<String,String>>> result) {
-
+//            Debug.waitForDebugger();
             for (int i = 0; i < result.size(); i++) {
                 ArrayList points = new ArrayList();
                 PolylineOptions lineOptions= new PolylineOptions();
@@ -349,7 +425,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
         protected String doInBackground(String... strings) {
             String data=null;
             try {
-                data=URLUtil.sendRequest(strings[0]);
+                data=new URLUtil().sendRequest(strings[0]);
 
             } catch (IOException e) {
                 Log.d("PlacesAPI",e.toString());
@@ -359,6 +435,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
 
         @Override
         protected void onPostExecute(String response) {
+//            Debug.waitForDebugger();
             super.onPostExecute(response);
             try {
                 JSONObject placeResponse=new JSONObject(response);
@@ -372,31 +449,15 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
                         markerPoints=new ArrayList<>();
                     MarkerOptions markerOptions = new MarkerOptions();
                     markerOptions.position(currentPlaceSelection);
-                    boolean isToRemove=false;
-                    int index=0;
-                    DecimalFormat df = new DecimalFormat("#.###");
-                    df.setRoundingMode(RoundingMode.FLOOR);
-                    for(vkalashnykov.org.busapplication.api.domain.Point point : markerPoints){
-                        if (df.format(point.getLatitude()).equals(df.format(pointToAdd.getLatitude()))
-                                && df.format(point.getLongitude()).equals(df.format(pointToAdd.getLongitude()))){
-                            isToRemove=true;
-                            index=markerPoints.indexOf(point);
-                        }
-                    }
-                    if (isToRemove) {
-                        markerPoints.remove(index);
-                        markers.remove(index);
-                        polylines.clear();
-                    }
-                    else {
-                        markerPoints.add(pointToAdd);
-                        markers.add(mMap.addMarker(markerOptions));
-                }
+
+                    markerPoints.add(pointToAdd);
+
+                    markers.add(mMap.addMarker(markerOptions));
 
 
 
-                    List<String> urls = URLUtil.getDirectionsUrl(markerPoints);
-                    if (urls.size() > 1) {
+                    List<String> urls = new URLUtil().getDirectionsUrl(markerPoints);
+                    if (urls.size() > 0) {
                         for (int i = 0; i < urls.size(); i++) {
                             String url = urls.get(i);
                             DownloadTask downloadTask = new DownloadTask();
@@ -414,4 +475,5 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
             }
         }
     }
+
 }

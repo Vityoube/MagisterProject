@@ -15,7 +15,7 @@ import vkalashnykov.org.busapplication.api.domain.Point;
 
 public class URLUtil {
 
-    public static String downloadUrl(String strUrl) throws IOException {
+    public String downloadUrl(String strUrl) throws IOException {
         String data = "";
         InputStream iStream = null;
         HttpURLConnection urlConnection = null;
@@ -49,7 +49,7 @@ public class URLUtil {
         }
         return data;
     }
-    public static List<String> getDirectionsUrl(ArrayList<Point> markerPoints) {
+    public List<String> getDirectionsUrl(ArrayList<Point> markerPoints) {
         List<String> mUrls = new ArrayList<>();
         if (markerPoints.size() > 1) {
             String str_origin = markerPoints.get(0).getLatitude() + "," + markerPoints.get(0).getLongitude();
@@ -74,7 +74,7 @@ public class URLUtil {
         return mUrls;
     }
 
-    public static String sendRequest(String uri) throws IOException{
+    public String sendRequest(String uri) throws IOException{
         InputStream iStream = null;
         HttpURLConnection urlConnection = null;
         String data=null;

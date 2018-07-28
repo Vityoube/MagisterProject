@@ -33,6 +33,8 @@
     <string name="comments">Comments</string>
     <string name="request_success">Request created successfuly</string>
     <string name="provide_location">Please provide location</string>
+    <string name="save_route">Save route</string>
+    <string name="prompt_exit">Press back again to exit</string>
 
 
 </resources>

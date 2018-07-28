@@ -16,6 +16,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -88,14 +89,21 @@ public class MainActivity extends FragmentActivity{
     private boolean editMap = false;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference routesRef;
+    private boolean promptExit=true;
+
 
     @Override
-    protected void onPause() {
-        super.onPause();
-//        if (mGoogleApiClient.isConnected()) {
-//            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-//            mGoogleApiClient.disconnect();
-//        }
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode==KeyEvent.KEYCODE_BACK){
+            if (promptExit){
+                Toast.makeText(this,R.string.prompt_exit,Toast.LENGTH_SHORT).show();
+                promptExit=false;
+            } else {
+                mAuth.signOut();
+                finish();
+            }
+        }
+        return false;
     }
 
     Marker mCurrLocationMarker;
@@ -117,39 +125,6 @@ public class MainActivity extends FragmentActivity{
         welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
         driverKey = intent.getStringExtra("USER_KEY");
         routesRef = database.getReference().child("routes");
-
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
-
-
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .addConnectionCallbacks(this)
-//                .addOnConnectionFailedListener(this)
-//                .addApi(LocationServices.API)
-//                .addApi(Places.PLACE_DETECTION_API)
-//                .build();
-//        mLocationRequest = LocationRequest.create()
-//                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-//                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
-//                .setFastestInterval(1 * 1000);
-//
-//        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-//        builder.addLocationRequest(mLocationRequest);
-//        LocationSettingsRequest locationSettingsRequest = builder.build();
-//
-//        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
-//        settingsClient.checkLocationSettings(locationSettingsRequest);
-//
-//
-//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
-//        }
-//        LocationServices.getFusedLocationProviderClient(this).
-//                requestLocationUpdates(mLocationRequest,new LocationCallback(){
-//                    @Override
-//                    public void onLocationResult(LocationResult locationResult) {
-//                        onLocationChanged(locationResult.getLastLocation());
-//                    }
-//                }, Looper.myLooper());
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -170,11 +145,6 @@ public class MainActivity extends FragmentActivity{
 
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-//        mGoogleApiClient.connect();
-    }
 
     @Override
     public void onStart() {
@@ -202,63 +172,6 @@ public class MainActivity extends FragmentActivity{
                 Toast.LENGTH_SHORT).show();
     }
 
-
-
-    private void handleNewLocation(Location location) {
-
-
-//        final double currentLatitude = location.getLatitude();
-//        final double currentLongitude = location.getLongitude();
-//        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
-//        routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                Route route = dataSnapshot.getValue(Route.class);
-//                route.setCurrentPosition(new Point(currentLatitude, currentLongitude));
-//                routesRef.child(driverKey).setValue(route);
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//                Toast.makeText(MainActivity.this,
-//                        R.string.databaseError, Toast.LENGTH_SHORT).show();
-//            }
-//        });
-
-    }
-
-
-    public void setEditRoute(View view) {
-        Button button = (Button) findViewById(R.id.editButton);
-        editMap = !editMap;
-        if (editMap) {
-            button.setText("Save Route");
-        } else {
-            saveRouteOnDatabase();
-
-            button.setText("Edit Route");
-
-
-        }
-
-
-    }
-
-    private void saveRouteOnDatabase() {
-        routesRef.child(driverKey).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Route route=dataSnapshot.getValue(Route.class);
-                route.setRoute(markerPoints);
-                dataSnapshot.getRef().setValue(route);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(MainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
     public void userDetails(View view) {
         Intent userDetailsIntent=new Intent(this,UserDetailsActivity.class);

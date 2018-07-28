@@ -111,7 +111,7 @@ public class RoutesAPI {
     public void addPointToRoute(LatLng latLng){
         String apiKey="AIzaSyAcwyEytYneiCAeth4iXI8iMyatyHUkN5U";
         final String placeUrl="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+
-                latLng.latitude+","+latLng.longitude+"&radius=10&type=bus_station&key="+apiKey;
+                latLng.latitude+","+latLng.longitude+"&radius=0&type=bus_station&key="+apiKey;
         currentPlaceSelection=latLng;
         final CallPlacesAPI callPlacesAPI=new CallPlacesAPI();
         try {

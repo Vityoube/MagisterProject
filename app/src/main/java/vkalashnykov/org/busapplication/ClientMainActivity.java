@@ -104,7 +104,6 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
         routes=new ArrayList<>();
         currentDriverPosition=null;
         currentRoute=new ArrayList<>();
-        routesList= (LinearLayout) findViewById(R.id.routesList);
         currentSelectedRoute=null;
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -226,165 +225,165 @@ public class ClientMainActivity extends FragmentActivity implements GoogleApiCli
 
         }
         mMap.setMyLocationEnabled(true);
-        routesRef.addChildEventListener( new ChildEventListener() {
-            @Override
-            public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
-                final Route addedRoute=dataSnapshot.getValue(Route.class);
-                final String routeKey=dataSnapshot.getKey();
-                routes.add(dataSnapshot.getKey());
-                final LinearLayout routeLayout=new LinearLayout(ClientMainActivity.this);
-                routeLayout.setOrientation(LinearLayout.HORIZONTAL);
-                TextView driverName=new TextView(ClientMainActivity.this);
-                driverName.setTypeface(Typeface.MONOSPACE,Typeface.BOLD_ITALIC);
-                driverName.setText(addedRoute.getDriverName());
-                TextViewCompat.setTextAppearance(driverName, R.style.TextAppearance_AppCompat_Body2);
-                LinearLayout.LayoutParams textParam=new LinearLayout.LayoutParams(0,
-                        ViewGroup.LayoutParams.MATCH_PARENT,0.8f);
-                LinearLayout.LayoutParams buttonParam=new LinearLayout.LayoutParams(0,
-                        ViewGroup.LayoutParams.MATCH_PARENT,0.2f);
-                Button sendMessage=new Button(ClientMainActivity.this);
-                sendMessage.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent goToCreateRequestIntent=new Intent(ClientMainActivity.this,
-                                ClientCreateRequestActivity.class);
-                        goToCreateRequestIntent.putExtra("DRIVER_NAME",addedRoute.getDriverName());
-                        goToCreateRequestIntent.putExtra("CLIENT_KEY",userKey);
-                        goToCreateRequestIntent.putExtra("DRIVER_KEY",dataSnapshot.getKey());
-                        startActivity(goToCreateRequestIntent);
-
-                    }
-                });
-                sendMessage.setText(R.string.create_request);
-                routeLayout.addView(driverName,textParam);
-                routeLayout.addView(sendMessage,textParam);
-                routesListSize++;
-                routeLayout.setId(routesListSize);
-                routeLayout.setOnClickListener(new View.OnClickListener() {
-                                                   @Override
-                                                   public void onClick(View v) {
-                                                       if (routeLayout.getSolidColor() != Color.BLUE) {
-                                                           mMap.clear();
-                                                           for (int i = 0; i < routesList.getChildCount(); i++) {
-                                                               LinearLayout currentLayout = (LinearLayout) routesList.getChildAt(i);
-                                                               currentLayout.setBackgroundColor(Color.TRANSPARENT);
-                                                           }
-                                                           routeLayout.setBackgroundColor(Color.BLUE);
-                                                           DatabaseReference routeReference=routesRef.child(routeKey);
-                                                           final RoutesAPI routesAPI = RoutesAPI.getInstance();
-                                                           routesAPI.setContext(ClientMainActivity.this);
-
-                                                           routeReference.child("currentPosition").addValueEventListener(new ValueEventListener() {
-                                                               @Override
-                                                               public void onDataChange(DataSnapshot dataSnapshot) {
-                                                                   if (currentDriverKey.equals(routeKey)){
-                                                                       Point changedDriverPosition=dataSnapshot.getValue(Point.class);
-                                                                       if(currentDriverPosition!=null){
-                                                                           currentDriverPosition.remove();
-                                                                       }
-                                                                       LatLng driverLatLng=new LatLng(changedDriverPosition.getLatitude(),
-                                                                               changedDriverPosition.getLongitude());
-                                                                       MarkerOptions busMarker=new MarkerOptions();
-                                                                       busMarker.position(driverLatLng);
-                                                                       busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
-                                                                       currentDriverPosition=mMap.addMarker(busMarker);
-                                                                   }
-
-
-                                                               }
-
-                                                               @Override
-                                                               public void onCancelled(DatabaseError databaseError) {
-                                                                   Toast.makeText(ClientMainActivity.this,R.string.databaseError,
-                                                                           Toast.LENGTH_SHORT).show();
-                                                               }
-                                                           });
-                                                           routeReference.child("route").addValueEventListener(new ValueEventListener() {
-                                                               @Override
-                                                               public void onDataChange(DataSnapshot dataSnapshot) {
-                                                                   if (currentDriverKey.equals(routeKey)){
-                                                                       ArrayList<Point> driverRoute=new ArrayList<>();
-                                                                       for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                                                                           Point driverRoutePoint=snapshot.getValue(Point.class);
-                                                                           driverRoute.add(driverRoutePoint);
-                                                                       }
-                                                                       if(currentRoute!=null && !currentRoute.isEmpty()){
-                                                                           for (Marker pointOnRoute: currentRoute){
-                                                                               pointOnRoute.remove();
-                                                                           }
-                                                                       }
-                                                                       if (currentRouteLines!=null && !currentRouteLines.isEmpty()){
-                                                                           for (com.google.android.gms.maps.model.Polyline polyline :
-                                                                                   currentRouteLines)
-                                                                               polyline.remove();
-
-                                                                       }
-                                                                       for ( Point point : driverRoute) {
-                                                                           MarkerOptions routeMarker=new MarkerOptions();
-                                                                           LatLng markerPosition=new LatLng(point.getLatitude(),
-                                                                                   point.getLongitude());
-                                                                           routeMarker.position(markerPosition);
-                                                                           currentRoute.add(mMap.addMarker(routeMarker));
-                                                                       }
-                                                                       routesAPI.downloadRoute(driverRoute);
-                                                                       MarkerOptions markerOptions = new MarkerOptions();
-                                                                       for (vkalashnykov.org.busapplication.api.domain.Point point : routesAPI.getMarkerPoints()) {
-                                                                           LatLng marker=new LatLng(point.getLatitude(),point.getLongitude());
-                                                                           markerOptions.position(marker);
-                                                                           currentRoute.add(mMap.addMarker(markerOptions));
-                                                                       }
-
-                                                                       for (PolylineOptions polylineOptions : routesAPI.getPolylines()){
-                                                                           mMap.addPolyline(polylineOptions);
-                                                                       }
-
-
-
-                                                                   }
-
-
-                                                               }
-
-                                                               @Override
-                                                               public void onCancelled(DatabaseError databaseError) {
-                                                                   Toast.makeText(ClientMainActivity.this,R.string.databaseError,
-                                                                           Toast.LENGTH_SHORT).show();
-                                                               }
-
-                                                           });
-
-                                                       }
-                                                   }
-                                               });
-
-                routesList.addView(routeLayout);
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                String routeKey = dataSnapshot.getKey();
-                int layoutToRemove = routes.indexOf(routeKey);
-                routes.remove(routeKey);
-                mMap.clear();
-                LinearLayout layout= (LinearLayout) routesList.getChildAt(layoutToRemove);
-                routesList.removeView(layout);
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                Toast.makeText(ClientMainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT).show();
-            }
-        });
+//        routesRef.addChildEventListener( new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
+//                final Route addedRoute=dataSnapshot.getValue(Route.class);
+//                final String routeKey=dataSnapshot.getKey();
+//                routes.add(dataSnapshot.getKey());
+//                final LinearLayout routeLayout=new LinearLayout(ClientMainActivity.this);
+//                routeLayout.setOrientation(LinearLayout.HORIZONTAL);
+//                TextView driverName=new TextView(ClientMainActivity.this);
+//                driverName.setTypeface(Typeface.MONOSPACE,Typeface.BOLD_ITALIC);
+//                driverName.setText(addedRoute.getDriverName());
+//                TextViewCompat.setTextAppearance(driverName, R.style.TextAppearance_AppCompat_Body2);
+//                LinearLayout.LayoutParams textParam=new LinearLayout.LayoutParams(0,
+//                        ViewGroup.LayoutParams.MATCH_PARENT,0.8f);
+//                LinearLayout.LayoutParams buttonParam=new LinearLayout.LayoutParams(0,
+//                        ViewGroup.LayoutParams.MATCH_PARENT,0.2f);
+//                Button sendMessage=new Button(ClientMainActivity.this);
+//                sendMessage.setOnClickListener(new View.OnClickListener() {
+//                    @Override
+//                    public void onClick(View v) {
+//                        Intent goToCreateRequestIntent=new Intent(ClientMainActivity.this,
+//                                ClientCreateRequestActivity.class);
+//                        goToCreateRequestIntent.putExtra("DRIVER_NAME",addedRoute.getDriverName());
+//                        goToCreateRequestIntent.putExtra("CLIENT_KEY",userKey);
+//                        goToCreateRequestIntent.putExtra("DRIVER_KEY",dataSnapshot.getKey());
+//                        startActivity(goToCreateRequestIntent);
+//
+//                    }
+//                });
+//                sendMessage.setText(R.string.create_request);
+//                routeLayout.addView(driverName,textParam);
+//                routeLayout.addView(sendMessage,textParam);
+//                routesListSize++;
+//                routeLayout.setId(routesListSize);
+//                routeLayout.setOnClickListener(new View.OnClickListener() {
+//                                                   @Override
+//                                                   public void onClick(View v) {
+//                                                       if (routeLayout.getSolidColor() != Color.BLUE) {
+//                                                           mMap.clear();
+//                                                           for (int i = 0; i < routesList.getChildCount(); i++) {
+//                                                               LinearLayout currentLayout = (LinearLayout) routesList.getChildAt(i);
+//                                                               currentLayout.setBackgroundColor(Color.TRANSPARENT);
+//                                                           }
+//                                                           routeLayout.setBackgroundColor(Color.BLUE);
+//                                                           DatabaseReference routeReference=routesRef.child(routeKey);
+//                                                           final RoutesAPI routesAPI = RoutesAPI.getInstance();
+//                                                           routesAPI.setContext(ClientMainActivity.this);
+//
+//                                                           routeReference.child("currentPosition").addValueEventListener(new ValueEventListener() {
+//                                                               @Override
+//                                                               public void onDataChange(DataSnapshot dataSnapshot) {
+//                                                                   if (currentDriverKey.equals(routeKey)){
+//                                                                       Point changedDriverPosition=dataSnapshot.getValue(Point.class);
+//                                                                       if(currentDriverPosition!=null){
+//                                                                           currentDriverPosition.remove();
+//                                                                       }
+//                                                                       LatLng driverLatLng=new LatLng(changedDriverPosition.getLatitude(),
+//                                                                               changedDriverPosition.getLongitude());
+//                                                                       MarkerOptions busMarker=new MarkerOptions();
+//                                                                       busMarker.position(driverLatLng);
+//                                                                       busMarker.icon(BitmapDescriptorFactory.fromResource(R.mipmap.bus_icon));
+//                                                                       currentDriverPosition=mMap.addMarker(busMarker);
+//                                                                   }
+//
+//
+//                                                               }
+//
+//                                                               @Override
+//                                                               public void onCancelled(DatabaseError databaseError) {
+//                                                                   Toast.makeText(ClientMainActivity.this,R.string.databaseError,
+//                                                                           Toast.LENGTH_SHORT).show();
+//                                                               }
+//                                                           });
+//                                                           routeReference.child("route").addValueEventListener(new ValueEventListener() {
+//                                                               @Override
+//                                                               public void onDataChange(DataSnapshot dataSnapshot) {
+//                                                                   if (currentDriverKey.equals(routeKey)){
+//                                                                       ArrayList<Point> driverRoute=new ArrayList<>();
+//                                                                       for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+//                                                                           Point driverRoutePoint=snapshot.getValue(Point.class);
+//                                                                           driverRoute.add(driverRoutePoint);
+//                                                                       }
+//                                                                       if(currentRoute!=null && !currentRoute.isEmpty()){
+//                                                                           for (Marker pointOnRoute: currentRoute){
+//                                                                               pointOnRoute.remove();
+//                                                                           }
+//                                                                       }
+//                                                                       if (currentRouteLines!=null && !currentRouteLines.isEmpty()){
+//                                                                           for (com.google.android.gms.maps.model.Polyline polyline :
+//                                                                                   currentRouteLines)
+//                                                                               polyline.remove();
+//
+//                                                                       }
+//                                                                       for ( Point point : driverRoute) {
+//                                                                           MarkerOptions routeMarker=new MarkerOptions();
+//                                                                           LatLng markerPosition=new LatLng(point.getLatitude(),
+//                                                                                   point.getLongitude());
+//                                                                           routeMarker.position(markerPosition);
+//                                                                           currentRoute.add(mMap.addMarker(routeMarker));
+//                                                                       }
+//                                                                       routesAPI.downloadRoute(driverRoute);
+//                                                                       MarkerOptions markerOptions = new MarkerOptions();
+//                                                                       for (vkalashnykov.org.busapplication.api.domain.Point point : routesAPI.getMarkerPoints()) {
+//                                                                           LatLng marker=new LatLng(point.getLatitude(),point.getLongitude());
+//                                                                           markerOptions.position(marker);
+//                                                                           currentRoute.add(mMap.addMarker(markerOptions));
+//                                                                       }
+//
+//                                                                       for (PolylineOptions polylineOptions : routesAPI.getPolylines()){
+//                                                                           mMap.addPolyline(polylineOptions);
+//                                                                       }
+//
+//
+//
+//                                                                   }
+//
+//
+//                                                               }
+//
+//                                                               @Override
+//                                                               public void onCancelled(DatabaseError databaseError) {
+//                                                                   Toast.makeText(ClientMainActivity.this,R.string.databaseError,
+//                                                                           Toast.LENGTH_SHORT).show();
+//                                                               }
+//
+//                                                           });
+//
+//                                                       }
+//                                                   }
+//                                               });
+//
+//                routesList.addView(routeLayout);
+//
+//            }
+//
+//            @Override
+//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(DataSnapshot dataSnapshot) {
+//                String routeKey = dataSnapshot.getKey();
+//                int layoutToRemove = routes.indexOf(routeKey);
+//                routes.remove(routeKey);
+//                mMap.clear();
+//                LinearLayout layout= (LinearLayout) routesList.getChildAt(layoutToRemove);
+//                routesList.removeView(layout);
+//            }
+//
+//            @Override
+//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                Toast.makeText(ClientMainActivity.this,R.string.databaseError,Toast.LENGTH_SHORT).show();
+//            }
+//        });
     }
 
     public void userDetails(View view) {

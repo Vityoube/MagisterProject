@@ -12,6 +12,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
 
 import vkalashnykov.org.busapplication.dummy.DummyContent;
 import vkalashnykov.org.busapplication.dummy.DummyContent.DummyItem;
@@ -27,6 +29,7 @@ import java.util.List;
 public class routeFragment extends ListFragment {
 
     String data[]=new String[]{"one","two","three","four"};
+    ListView lv;
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -35,6 +38,22 @@ public class routeFragment extends ListFragment {
                 android.R.layout.simple_list_item_1,
                 data);
         setListAdapter(adapter);
+        getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
 
     }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment,null);
+
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        Toast.makeText(getActivity(),"position = "+position,Toast.LENGTH_SHORT).show();
+    }
+
+
 }

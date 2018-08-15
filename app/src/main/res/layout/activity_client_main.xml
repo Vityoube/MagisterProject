@@ -51,13 +51,6 @@
             android:layout_weight="50"
             android:tag="main">
         </fragment>
-        <fragment
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="37"
-            android:id="@+id/routesList"
-            android:name="vkalashnykov.org.busapplication.routeFragment"/>
-
 
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

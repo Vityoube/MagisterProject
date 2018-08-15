@@ -35,9 +35,8 @@
     <string name="provide_location">Please provide location</string>
     <string name="save_route">Save route</string>
     <string name="prompt_exit">Press back again to exit</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="routes_list">Routes list</string>
+    <string name="routes_list_empty">No routes available</string>
 
 
 </resources>

@@ -51,7 +51,7 @@
 
             <fragment
                 android:id="@+id/map"
-                android:name="vkalashnykov.org.busapplication.DriverMapFragment"
+                android:name="vkalashnykov.org.busapplication.fragment.DriverMapFragment"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight=".90">

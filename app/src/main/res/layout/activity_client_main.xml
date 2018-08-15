@@ -45,11 +45,18 @@
 
         <fragment
             android:id="@+id/map"
-            android:name="vkalashnykov.org.busapplication.ClientMapFragment"
+            android:name="vkalashnykov.org.busapplication.fragment.ClientMapFragment"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="50"
             android:tag="main">
+        </fragment>
+        <fragment
+            android:id="@android:id/list"
+            android:name="vkalashnykov.org.busapplication.fragment.ClientRoutesListFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="50">
         </fragment>
 
     </LinearLayout>

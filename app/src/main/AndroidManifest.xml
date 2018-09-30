@@ -25,10 +25,11 @@
             android:value="@integer/google_play_services_version" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAcwyEytYneiCAeth4iXI8iMyatyHUkN5U" />
+            android:value="AIzaSyCcf-Q27CEW5Uj90qOuNsXhQcI0tHinJYM" />
 
         <activity
             android:name=".LoginActivity"
+            android:theme="@style/Base.Theme.AppCompat.Light"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -37,6 +37,7 @@
     <string name="prompt_exit">Press back again to exit</string>
     <string name="routes_list">Routes list</string>
     <string name="routes_list_empty">No routes available</string>
+    <string name="api_key">AIzaSyCcf-Q27CEW5Uj90qOuNsXhQcI0tHinJYM</string>
 
 
 </resources>

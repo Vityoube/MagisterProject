@@ -16,7 +16,7 @@ import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class ClientRoutesListFragment extends ListFragment {
 
-
+    // TODO: add FirebaseListAdapter to retrieve routes from Firebase Database
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_client_routes_list,null);

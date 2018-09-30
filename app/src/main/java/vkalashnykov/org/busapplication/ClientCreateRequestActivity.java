@@ -50,12 +50,10 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import vkalashnykov.org.busapplication.api.domain.Point;
 import vkalashnykov.org.busapplication.api.domain.Request;
 import vkalashnykov.org.busapplication.api.domain.Route;
-import vkalashnykov.org.busapplication.api.util.RoutesAPI;
 
 public class ClientCreateRequestActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,LocationListener, OnMapReadyCallback {

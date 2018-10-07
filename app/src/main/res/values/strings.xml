@@ -38,6 +38,9 @@
     <string name="routes_list">Routes list</string>
     <string name="routes_list_empty">No routes available</string>
     <string name="api_key">AIzaSyCcf-Q27CEW5Uj90qOuNsXhQcI0tHinJYM</string>
-
+    <string name="add_point">Add point to route</string>
+    <string name="remove_point_question">Do you want to remove the point?</string>
+    <string name="remove">Remove</string>
+    <string name="cancel">Cancel</string>
 
 </resources>

@@ -85,7 +85,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
     private DatabaseReference currentRouteRef;
     int PLACE_PICKER_REQUEST = 1;
 
-    // TODO: Optimization of Route calculatings is done. Algorythm needs to be polished.
+    // TODO: Optimization of Route calculatings is done. Algorythm needs to be polished. Needs to be thinked more in details.
 
 
     @Override
@@ -401,8 +401,10 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
         }
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(selection);
-        int index=0;
+        int tempIndex=-1;
+        int tempIndex2=-1;
         double minDistance=999999999;
+        double maxDistance=0;
         if (!markerPoints.isEmpty()){
             for (int i=0;i<markerPoints.size();i++){
                 LatLng compableLatLng=new LatLng(
@@ -412,10 +414,30 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
                 double currentDistance=SphericalUtil.computeDistanceBetween(selection,compableLatLng);
                 if (currentDistance<minDistance){
                     minDistance=currentDistance;
-                    index=i+1;
+                    tempIndex=i+1;
                 }
             }
-
+            for (int i=0;i<markerPoints.size();i++){
+                LatLng compableLatLng=new LatLng(
+                        markerPoints.get(tempIndex-1).getLatitude(),
+                        markerPoints.get(tempIndex-1).getLongitude()
+                );
+                LatLng maxDistanceLatLng=new LatLng(
+                        markerPoints.get(i).getLatitude(),
+                        markerPoints.get(i).getLongitude()
+                );
+                double currentDistance=SphericalUtil.computeDistanceBetween(maxDistanceLatLng,compableLatLng);
+                if (currentDistance>maxDistance){
+                    maxDistance=currentDistance;
+                    tempIndex2=i+1;
+                }
+            }
+        }
+        int index=0;
+        if (maxDistance<=minDistance && tempIndex!=-1 && tempIndex2!=-1){
+            index=tempIndex2;
+        } else if (maxDistance>minDistance){
+            index=tempIndex;
         }
         if (index==0){
             markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));

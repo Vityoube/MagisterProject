@@ -45,6 +45,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -56,6 +57,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.maps.android.SphericalUtil;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -82,6 +84,8 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
     GoogleMap mMap;
     private DatabaseReference currentRouteRef;
     int PLACE_PICKER_REQUEST = 1;
+
+    // TODO: Optimization of Route calculatings is done. Algorythm needs to be polished.
 
 
     @Override
@@ -397,10 +401,32 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
         }
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(selection);
+        int index=0;
+        double minDistance=999999999;
+        if (!markerPoints.isEmpty()){
+            for (int i=0;i<markerPoints.size();i++){
+                LatLng compableLatLng=new LatLng(
+                        markerPoints.get(i).getLatitude(),
+                        markerPoints.get(i).getLongitude()
+                );
+                double currentDistance=SphericalUtil.computeDistanceBetween(selection,compableLatLng);
+                if (currentDistance<minDistance){
+                    minDistance=currentDistance;
+                    index=i+1;
+                }
+            }
 
-        markerPoints.add(pointToAdd);
+        }
+        if (index==0){
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+        } else if (index==markers.size()){
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+        } else {
+            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+        }
+        markerPoints.add(index,pointToAdd);
 
-        markers.add(mMap.addMarker(markerOptions));
+        markers.add(index,mMap.addMarker(markerOptions));
 
         updateRoute();
 

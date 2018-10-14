@@ -84,8 +84,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
     GoogleMap mMap;
     private DatabaseReference currentRouteRef;
     int PLACE_PICKER_REQUEST = 1;
-
-    // TODO: Optimization of Route calculatings is done. Algorythm needs to be polished. Needs to be thinked more in details.
+    private LatLng currentDriverPosition;
 
 
     @Override
@@ -282,6 +281,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
         final double currentLatitude = location.getLatitude();
         final double currentLongitude = location.getLongitude();
         LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        currentDriverPosition=latLng;
         currentRouteRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -301,6 +301,22 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
 
     public void updateRoute() {
         saveRoute();
+        if (markers!=null && !markers.isEmpty()){
+            for (int i=0;i<markers.size();i++){
+                Marker marker=markers.get(i);
+                if(i==0){
+                    markers.get(i).setIcon(
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                } else if (i==markers.size()-1){
+                    markers.get(i).setIcon(
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                } else {
+                    markers.get(i).setIcon(
+                            BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                }
+            }
+        }
+
         if (polylines != null && !polylines.isEmpty()) {
             for (Polyline polyline : polylines) {
                 polyline.remove();
@@ -394,6 +410,7 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
                 );
         if (markerPoints == null)
             markerPoints = new ArrayList<>();
+
         for (Point point : markerPoints) {
             if (point.getLatitude().equals(pointToAdd.getLatitude()) && point.getLongitude().equals(pointToAdd.getLongitude())) {
                 return;
@@ -401,54 +418,37 @@ public class DriverMapFragment extends MapFragment implements GoogleApiClient.Co
         }
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(selection);
-        int tempIndex=-1;
-        int tempIndex2=-1;
-        double minDistance=999999999;
-        double maxDistance=0;
         if (!markerPoints.isEmpty()){
-            for (int i=0;i<markerPoints.size();i++){
-                LatLng compableLatLng=new LatLng(
-                        markerPoints.get(i).getLatitude(),
-                        markerPoints.get(i).getLongitude()
-                );
-                double currentDistance=SphericalUtil.computeDistanceBetween(selection,compableLatLng);
-                if (currentDistance<minDistance){
-                    minDistance=currentDistance;
-                    tempIndex=i+1;
+            double distanceBetweenCurrentAndSelection=
+                    SphericalUtil.computeDistanceBetween(selection,currentDriverPosition);
+            Point lastPoint=markerPoints.get(markerPoints.size()-1);
+            LatLng lastPointLatLng=new LatLng(lastPoint.getLatitude(),lastPoint.getLongitude());
+            double distanceBetweenLastPointAndCurrent=
+                    SphericalUtil.computeDistanceBetween(lastPointLatLng,currentDriverPosition);
+            if(distanceBetweenCurrentAndSelection<=distanceBetweenLastPointAndCurrent){
+                double minDistance=999999999;
+                int index=-1;
+                for (int i=0;i<markerPoints.size();i++){
+                    LatLng pointLatLng=new LatLng(
+                            markerPoints.get(i).getLatitude(),
+                            markerPoints.get(i).getLongitude());
+                    double distanceToSelection=
+                            SphericalUtil.computeDistanceBetween(selection,pointLatLng);
+                    if (distanceToSelection<minDistance){
+                        minDistance=distanceToSelection;
+                        index=i+1;
+                    }
                 }
+                markerPoints.add(index,pointToAdd);
+                markers.add(index,mMap.addMarker(markerOptions));
+            } else {
+                markers.add(mMap.addMarker(markerOptions));
+                markerPoints.add(pointToAdd);
             }
-            for (int i=0;i<markerPoints.size();i++){
-                LatLng compableLatLng=new LatLng(
-                        markerPoints.get(tempIndex-1).getLatitude(),
-                        markerPoints.get(tempIndex-1).getLongitude()
-                );
-                LatLng maxDistanceLatLng=new LatLng(
-                        markerPoints.get(i).getLatitude(),
-                        markerPoints.get(i).getLongitude()
-                );
-                double currentDistance=SphericalUtil.computeDistanceBetween(maxDistanceLatLng,compableLatLng);
-                if (currentDistance>maxDistance){
-                    maxDistance=currentDistance;
-                    tempIndex2=i+1;
-                }
-            }
-        }
-        int index=0;
-        if (maxDistance<=minDistance && tempIndex!=-1 && tempIndex2!=-1){
-            index=tempIndex2;
-        } else if (maxDistance>minDistance){
-            index=tempIndex;
-        }
-        if (index==0){
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-        } else if (index==markers.size()){
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
         } else {
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+            markerPoints.add(pointToAdd);
+            markers.add(mMap.addMarker(markerOptions));
         }
-        markerPoints.add(index,pointToAdd);
-
-        markers.add(index,mMap.addMarker(markerOptions));
 
         updateRoute();
 

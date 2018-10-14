@@ -2,10 +2,12 @@ package vkalashnykov.org.busapplication.fragment;
 
 import android.app.LauncherActivity;
 import android.app.ListFragment;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +26,7 @@ import vkalashnykov.org.busapplication.R;
 import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class ClientRoutesListFragment extends ListFragment {
+    private OnChooseRouteFromListListener listener;
 
     private FirebaseListAdapter<Route> routeAdapter;
     private DatabaseReference selectedRouteRef;
@@ -58,6 +61,7 @@ public class ClientRoutesListFragment extends ListFragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 selectedRouteRef=routeAdapter.getRef(position);
+                listener.passRouteToMap(selectedRouteRef.getKey());
                 for (int i=0;i<parent.getCount();i++){
                     if (i==position){
                         parent.getChildAt(i).setBackgroundColor(Color.GREEN);
@@ -82,7 +86,13 @@ public class ClientRoutesListFragment extends ListFragment {
         routeAdapter.stopListening();
     }
 
-
-
-
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            listener=(OnChooseRouteFromListListener)context;
+        } catch (ClassCastException e){
+            Log.e("ClientRoutesList","Failed to instantiate listener: "+e.toString());
+        }
+    }
 }

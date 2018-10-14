@@ -2,6 +2,9 @@ package vkalashnykov.org.busapplication.fragment;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Looper;
@@ -12,7 +15,7 @@ import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.ImageView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -27,17 +30,21 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
+import com.google.maps.android.ui.IconGenerator;
 
+import vkalashnykov.org.busapplication.R;
 import vkalashnykov.org.busapplication.api.domain.Point;
 import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class ClientMapFragment extends MapFragment implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener, OnMapReadyCallback {
+        GoogleApiClient.OnConnectionFailedListener,
+        com.google.android.gms.location.LocationListener,
+        OnMapReadyCallback {
 // TODO: add possibility to add Location to Request from Client if access from Client Request Activity
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
@@ -46,6 +53,9 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
     private GoogleMap mMap;
     private final String MAIN_TAG="main";
     private final String REQUEST="request";
+    private Marker currentDriverMarker;
+    private  IconGenerator mIconGenerator;
+    private ImageView mImageView;
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -63,18 +73,12 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest,
                     this);
         } else {
-            handleNewLocation(location);
+            LatLng currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 16));
         }
 
     }
 
-    private void handleNewLocation(Location location) {
-        final double currentLatitude = location.getLatitude();
-        final double currentLongitude = location.getLongitude();
-        LatLng currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 16));
-
-    }
 
     @Override
     public void onConnectionSuspended(int i) {
@@ -88,7 +92,6 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
 
     @Override
     public void onLocationChanged(Location location) {
-        handleNewLocation(location);
     }
 
     @Override
@@ -122,15 +125,6 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
 
         getMapAsync(this);
 
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
-        LocationSettingsRequest locationSettingsRequest = builder.build();
-
-        SettingsClient settingsClient = LocationServices.getSettingsClient(this.getActivity()
-        );
-        settingsClient.checkLocationSettings(locationSettingsRequest);
-
-
         if (ActivityCompat.checkSelfPermission(this.getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this.getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) !=
@@ -138,13 +132,49 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
             ActivityCompat.requestPermissions(this.getActivity(),
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
         }
-        LocationServices.getFusedLocationProviderClient(this.getActivity()).
-                requestLocationUpdates(mLocationRequest, new LocationCallback() {
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-                        onLocationChanged(locationResult.getLastLocation());
-                    }
-                }, Looper.myLooper());
+        mIconGenerator=new IconGenerator(getActivity());
+        mImageView=new ImageView(getActivity());
+        mIconGenerator.setContentView(mImageView);
+        mIconGenerator.setBackground(new ColorDrawable(Color.TRANSPARENT));
         return super.onCreateView(layoutInflater, viewGroup, bundle);
+    }
+
+
+    // TODO: set correct size of driver position icon (now it is too large)
+    // TODO: add drwaing of driver's route
+    public void updateRoute(Route selectedRoute) {
+        Point driverPosition=selectedRoute.getCurrentPosition();
+        if (currentDriverMarker!=null){
+            if (driverPosition.getLongitude()!= currentDriverMarker.getPosition().longitude
+                    || driverPosition.getLatitude()!=currentDriverMarker.getPosition().latitude){
+                currentDriverMarker.setPosition(new LatLng(driverPosition.getLatitude(),
+                        driverPosition.getLongitude()));
+            }
+        } else {
+            mImageView.setImageResource(R.mipmap.bus_icon_);
+            Bitmap icon = mIconGenerator.makeIcon();
+            MarkerOptions driverPositionOptions=new MarkerOptions();
+            driverPositionOptions.position(new LatLng(driverPosition.getLatitude(),
+                    driverPosition.getLongitude()));
+            driverPositionOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+            currentDriverMarker=mMap.addMarker(driverPositionOptions);
+        }
+
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mGoogleApiClient.connect();
     }
 }

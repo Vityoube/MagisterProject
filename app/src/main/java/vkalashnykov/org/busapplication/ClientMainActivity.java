@@ -38,16 +38,15 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
+import vkalashnykov.org.busapplication.api.domain.Point;
 import vkalashnykov.org.busapplication.api.domain.Route;
 import vkalashnykov.org.busapplication.fragment.ClientMapFragment;
 import vkalashnykov.org.busapplication.fragment.OnChooseRouteFromListListener;
 
 @SuppressWarnings("deprecation")
 public class ClientMainActivity extends FragmentActivity implements OnChooseRouteFromListListener
-//        GoogleApiClient.ConnectionCallbacks,
-//        GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener,
-//        OnMapReadyCallback,
     {
+        //TODO: fix changing the different Route from list (Now the updates from previous route are shown)
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
@@ -70,6 +69,11 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
     private ArrayList<Marker> currentRoute;
     private ArrayList<com.google.android.gms.maps.model.Polyline> currentRouteLines;
     private DatabaseReference selectedRouteRef;
+    private Point driverPosition;
+    private ValueEventListener createMarkerListener;
+    private ValueEventListener updateMarkerListener;
+    private ValueEventListener updateRouteListener;
+    private ClientMapFragment mapFragment;
 
         @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +88,48 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         currentDriverPosition=null;
         currentRoute=new ArrayList<>();
         currentRouteLines=new ArrayList<>();
+        mapFragment=(ClientMapFragment) getFragmentManager().findFragmentById(R.id.map);
+        createMarkerListener=new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Point driverPosition=dataSnapshot.getValue(Point.class);
+                mapFragment.createDriverPositionMarker(driverPosition);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("ClientMapDriverPosition",databaseError.getMessage());
+
+            }
+        };
+        updateMarkerListener=new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                driverPosition=(Point) dataSnapshot.getValue(Point.class);
+                mapFragment.updateDriverPosition(driverPosition);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("ClientMapDriverPosition",databaseError.getMessage());
+            }
+        };
+        updateRouteListener=new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                ArrayList<Point> route=new ArrayList<Point>();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    Point point=snapshot.getValue(Point.class);
+                    route.add(point);
+                }
+                mapFragment.updateRoute(route);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("ClientMapRoute",databaseError.getMessage());
+            }
+        };
     }
 
     public void userDetails(View view) {
@@ -106,19 +152,17 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         public void passRouteToMap(String routeKey) {
             final ClientMapFragment mapFragment=
                     (ClientMapFragment) getFragmentManager().findFragmentById(R.id.map);
+            if (selectedRouteRef!=null){
+                selectedRouteRef.removeEventListener(updateMarkerListener);
+                selectedRouteRef.removeEventListener(createMarkerListener);
+                selectedRouteRef.removeEventListener(updateRouteListener);
+            }
             selectedRouteRef=FirebaseDatabase.getInstance().getReference("routes").child(routeKey);
-            selectedRouteRef.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    selectedRoute=(Route)dataSnapshot.getValue(Route.class);
-                    mapFragment.updateRoute(selectedRoute);
-                }
+            selectedRouteRef.child("currentPosition").
+                    addListenerForSingleValueEvent(createMarkerListener);
+            selectedRouteRef.child("currentPosition").addValueEventListener(updateMarkerListener);
 
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    Log.e("ClientMainFirebase",databaseError.getMessage());
-                }
-            });
+            selectedRouteRef.child("route").addValueEventListener(updateRouteListener);
         }
 
 

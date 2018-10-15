@@ -45,4 +45,5 @@ public class Route implements Serializable{
     public void setCurrentPosition(Point currentPosition) {
         this.currentPosition = currentPosition;
     }
+
 }

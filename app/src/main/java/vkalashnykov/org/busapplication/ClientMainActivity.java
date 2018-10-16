@@ -89,47 +89,47 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         currentRoute=new ArrayList<>();
         currentRouteLines=new ArrayList<>();
         mapFragment=(ClientMapFragment) getFragmentManager().findFragmentById(R.id.map);
-        createMarkerListener=new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Point driverPosition=dataSnapshot.getValue(Point.class);
-                mapFragment.createDriverPositionMarker(driverPosition);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("ClientMapDriverPosition",databaseError.getMessage());
-
-            }
-        };
-        updateMarkerListener=new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                driverPosition=(Point) dataSnapshot.getValue(Point.class);
-                mapFragment.updateDriverPosition(driverPosition);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("ClientMapDriverPosition",databaseError.getMessage());
-            }
-        };
-        updateRouteListener=new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ArrayList<Point> route=new ArrayList<Point>();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    Point point=snapshot.getValue(Point.class);
-                    route.add(point);
-                }
-                mapFragment.updateRoute(route);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("ClientMapRoute",databaseError.getMessage());
-            }
-        };
+//        createMarkerListener=new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                Point driverPosition=dataSnapshot.getValue(Point.class);
+//                mapFragment.createDriverPositionMarker(driverPosition);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//                Log.e("ClientMapDriverPosition",databaseError.getMessage());
+//
+//            }
+//        };
+//        updateMarkerListener=new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                driverPosition=(Point) dataSnapshot.getValue(Point.class);
+//                mapFragment.updateDriverPosition(driverPosition);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//                Log.e("ClientMapDriverPosition",databaseError.getMessage());
+//            }
+//        };
+//        updateRouteListener=new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                ArrayList<Point> route=new ArrayList<Point>();
+//                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+//                    Point point=snapshot.getValue(Point.class);
+//                    route.add(point);
+//                }
+//                mapFragment.updateRoute(route);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//                Log.e("ClientMapRoute",databaseError.getMessage());
+//            }
+//        };
     }
 
     public void userDetails(View view) {
@@ -153,10 +153,52 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
             final ClientMapFragment mapFragment=
                     (ClientMapFragment) getFragmentManager().findFragmentById(R.id.map);
             if (selectedRouteRef!=null){
-                selectedRouteRef.removeEventListener(updateMarkerListener);
-                selectedRouteRef.removeEventListener(createMarkerListener);
-                selectedRouteRef.removeEventListener(updateRouteListener);
+                selectedRouteRef.child("currentPosition").removeEventListener(updateMarkerListener);
+                selectedRouteRef.child("currentPosition").removeEventListener(createMarkerListener);
+                selectedRouteRef.child("route").removeEventListener(updateRouteListener);
+
             }
+            createMarkerListener=new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Point driverPosition=dataSnapshot.getValue(Point.class);
+                    mapFragment.createDriverPositionMarker(driverPosition);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.e("ClientMapDriverPosition",databaseError.getMessage());
+
+                }
+            };
+            updateMarkerListener=new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    driverPosition=(Point) dataSnapshot.getValue(Point.class);
+                    mapFragment.updateDriverPosition(driverPosition);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.e("ClientMapDriverPosition",databaseError.getMessage());
+                }
+            };
+            updateRouteListener=new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    ArrayList<Point> route=new ArrayList<Point>();
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                        Point point=snapshot.getValue(Point.class);
+                        route.add(point);
+                    }
+                    mapFragment.updateRoute(route);
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                    Log.e("ClientMapRoute",databaseError.getMessage());
+                }
+            };
             selectedRouteRef=FirebaseDatabase.getInstance().getReference("routes").child(routeKey);
             selectedRouteRef.child("currentPosition").
                     addListenerForSingleValueEvent(createMarkerListener);

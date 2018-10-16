@@ -26,7 +26,7 @@ import java.util.ArrayList;
 @SuppressWarnings("deprecation")
 public class MainActivity extends FragmentActivity{
 
-
+//TODO: add possibilty to List Requests and change their status
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private static final String BUS = "BusApplication";
     TextView welcomeMessage;

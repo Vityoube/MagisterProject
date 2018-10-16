@@ -46,7 +46,7 @@ import vkalashnykov.org.busapplication.fragment.OnChooseRouteFromListListener;
 @SuppressWarnings("deprecation")
 public class ClientMainActivity extends FragmentActivity implements OnChooseRouteFromListListener
     {
-        //TODO: fix changing the different Route from list (Now the updates from previous route are shown)
+        // TODO: Add possibilty to add Request to Driver
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;

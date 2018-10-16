@@ -30,9 +30,6 @@ public class ClientRoutesListFragment extends ListFragment {
 
     private FirebaseListAdapter<Route> routeAdapter;
     private DatabaseReference selectedRouteRef;
-    /* TODO: add possibility to pass the Selected Route Reference to ClientMapFragment
-    so it can display the route and current driver position
-     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_client_routes_list,null);

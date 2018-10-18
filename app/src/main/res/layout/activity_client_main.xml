@@ -51,6 +51,14 @@
             android:layout_weight="50"
             android:tag="main">
         </fragment>
+        <Button
+            android:id="@+id/createRequest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/create_request"
+            android:enabled="false"
+            android:layout_gravity="center"
+            android:background="@color/colorPrimary"/>
         <fragment
             android:id="@android:id/list"
             android:name="vkalashnykov.org.busapplication.fragment.ClientRoutesListFragment"

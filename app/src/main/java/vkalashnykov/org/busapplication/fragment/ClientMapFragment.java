@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import com.akexorcist.googledirection.DirectionCallback;
@@ -72,6 +73,7 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
     private ImageView mImageView;
     private ArrayList<Marker> markers;
     private  ArrayList<Polyline> polylines;
+    private Button sendRequestButton;
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -277,5 +279,7 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
                 driverPosition.getLongitude()));
         driverPositionOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_bus));
         currentDriverMarker=mMap.addMarker(driverPositionOptions);
+        sendRequestButton=new Button(getActivity());
+        View mapFragmentView=getView();
     }
 }

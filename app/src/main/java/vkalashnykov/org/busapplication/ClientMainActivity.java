@@ -13,6 +13,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -74,6 +75,7 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
     private ValueEventListener updateMarkerListener;
     private ValueEventListener updateRouteListener;
     private ClientMapFragment mapFragment;
+    private Button createRequestButton;
 
         @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,47 +91,6 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         currentRoute=new ArrayList<>();
         currentRouteLines=new ArrayList<>();
         mapFragment=(ClientMapFragment) getFragmentManager().findFragmentById(R.id.map);
-//        createMarkerListener=new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                Point driverPosition=dataSnapshot.getValue(Point.class);
-//                mapFragment.createDriverPositionMarker(driverPosition);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//                Log.e("ClientMapDriverPosition",databaseError.getMessage());
-//
-//            }
-//        };
-//        updateMarkerListener=new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                driverPosition=(Point) dataSnapshot.getValue(Point.class);
-//                mapFragment.updateDriverPosition(driverPosition);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//                Log.e("ClientMapDriverPosition",databaseError.getMessage());
-//            }
-//        };
-//        updateRouteListener=new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                ArrayList<Point> route=new ArrayList<Point>();
-//                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-//                    Point point=snapshot.getValue(Point.class);
-//                    route.add(point);
-//                }
-//                mapFragment.updateRoute(route);
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//                Log.e("ClientMapRoute",databaseError.getMessage());
-//            }
-//        };
     }
 
     public void userDetails(View view) {
@@ -163,6 +124,14 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Point driverPosition=dataSnapshot.getValue(Point.class);
                     mapFragment.createDriverPositionMarker(driverPosition);
+                    createRequestButton=findViewById(R.id.createRequest);
+                    createRequestButton.setEnabled(true);
+                    createRequestButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                        }
+                    });
                 }
 
                 @Override

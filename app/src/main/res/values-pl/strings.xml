@@ -42,5 +42,7 @@
     <string name="remove_point_question">Czy na pewno usunąć punkt?</string>
     <string name="remove">Usuń</string>
     <string name="cancel">Anuluj</string>
+    <string name="location">Lokalizacja</string>
+    <string name="submit">Zatwierdź</string>
 
 </resources>

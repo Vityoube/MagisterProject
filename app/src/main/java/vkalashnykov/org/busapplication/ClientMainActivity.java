@@ -1,6 +1,7 @@
 package vkalashnykov.org.busapplication;
 
 import android.Manifest;
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -42,10 +43,12 @@ import java.util.ArrayList;
 import vkalashnykov.org.busapplication.api.domain.Point;
 import vkalashnykov.org.busapplication.api.domain.Route;
 import vkalashnykov.org.busapplication.fragment.ClientMapFragment;
+import vkalashnykov.org.busapplication.fragment.CreateRequestFragment;
 import vkalashnykov.org.busapplication.fragment.OnChooseRouteFromListListener;
 
 @SuppressWarnings("deprecation")
-public class ClientMainActivity extends FragmentActivity implements OnChooseRouteFromListListener
+public class ClientMainActivity extends FragmentActivity implements OnChooseRouteFromListListener,
+        CreateRequestFragment.CreateRequestFragmentListener
     {
         // TODO: Add possibilty to add Request to Driver
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -129,7 +132,8 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
                     createRequestButton.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-
+                            CreateRequestFragment createRequestFragment=new CreateRequestFragment();
+                            createRequestFragment.show(getFragmentManager(),"request");
                         }
                     });
                 }
@@ -177,4 +181,8 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         }
 
 
-}
+        @Override
+        public void onSubmitClick(DialogFragment dialogFragment) {
+
+        }
+    }

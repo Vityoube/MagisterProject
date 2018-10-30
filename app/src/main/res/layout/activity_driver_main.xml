@@ -50,7 +50,7 @@
             android:weightSum="1">
 
             <fragment
-                android:id="@+id/map"
+                android:id="@+id/mapCientMain"
                 android:name="vkalashnykov.org.busapplication.fragment.DriverMapFragment"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"

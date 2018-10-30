@@ -1,17 +1,10 @@
 package vkalashnykov.org.busapplication;
 
-import android.Manifest;
 import android.app.DialogFragment;
 import android.content.Intent;
-import android.content.IntentSender;
-import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,19 +12,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -79,6 +67,7 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
     private ValueEventListener updateRouteListener;
     private ClientMapFragment mapFragment;
     private Button createRequestButton;
+    int PLACE_PICKER_REQUEST=1;
 
         @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +82,7 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         currentDriverPosition=null;
         currentRoute=new ArrayList<>();
         currentRouteLines=new ArrayList<>();
-        mapFragment=(ClientMapFragment) getFragmentManager().findFragmentById(R.id.map);
+        mapFragment=(ClientMapFragment) getFragmentManager().findFragmentById(R.id.mapCientMain);
     }
 
     public void userDetails(View view) {
@@ -115,7 +104,7 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         @Override
         public void passRouteToMap(String routeKey) {
             final ClientMapFragment mapFragment=
-                    (ClientMapFragment) getFragmentManager().findFragmentById(R.id.map);
+                    (ClientMapFragment) getFragmentManager().findFragmentById(R.id.mapCientMain);
             if (selectedRouteRef!=null){
                 selectedRouteRef.child("currentPosition").removeEventListener(updateMarkerListener);
                 selectedRouteRef.child("currentPosition").removeEventListener(createMarkerListener);
@@ -185,4 +174,19 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         public void onSubmitClick(DialogFragment dialogFragment) {
 
         }
+
+        @Override
+        public void onSelectLocationClick() {
+            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+
+            try {
+                startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+            } catch (GooglePlayServicesRepairableException e) {
+                Log.e("ClientPlaces","GooglePlayServicesRepairableException",e);
+            } catch (GooglePlayServicesNotAvailableException e) {
+                Log.e("ClientPlaces","GooglePlayServicesNotAvailableException",e);
+            }
+        }
+
+
     }

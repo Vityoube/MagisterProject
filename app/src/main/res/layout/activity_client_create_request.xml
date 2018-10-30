@@ -48,7 +48,7 @@
              />
         <fragment
             android:name="com.google.android.gms.maps.MapFragment"
-            android:id="@+id/map"
+            android:id="@+id/mapCientMain"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="0.7"/>

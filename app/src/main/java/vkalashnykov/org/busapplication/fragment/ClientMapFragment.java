@@ -1,13 +1,11 @@
 package vkalashnykov.org.busapplication.fragment;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -29,12 +27,12 @@ import com.akexorcist.googledirection.model.Step;
 import com.akexorcist.googledirection.util.DirectionConverter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceDetectionApi;
+import com.google.android.gms.location.places.PlaceDetectionClient;
+import com.google.android.gms.location.places.PlaceFilter;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -54,7 +52,6 @@ import java.util.List;
 
 import vkalashnykov.org.busapplication.R;
 import vkalashnykov.org.busapplication.api.domain.Point;
-import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class ClientMapFragment extends MapFragment implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -66,14 +63,22 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
     private ArrayList<Point> currentSelectedRoute;
     private DatabaseReference currentRouteRef;
     private GoogleMap mMap;
-    private final String MAIN_TAG="main";
-    private final String REQUEST="request";
     private Marker currentDriverMarker;
     private  IconGenerator mIconGenerator;
     private ImageView mImageView;
     private ArrayList<Marker> markers;
     private  ArrayList<Polyline> polylines;
     private Button sendRequestButton;
+    private ClientMapClickListener mapClickListener;
+    private Marker currentRequestMarker;
+
+    public void setRouteRef(DatabaseReference routeRef) {
+        this.currentRouteRef = routeRef;
+    }
+
+    public interface ClientMapClickListener {
+        void clickOnMap(Marker marker);
+    }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -123,9 +128,7 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
 
         }
         mMap.setMyLocationEnabled(true);
-        if (REQUEST.equals(getTag())){
 
-        }
     }
 
     @Override
@@ -281,5 +284,16 @@ public class ClientMapFragment extends MapFragment implements GoogleApiClient.Co
         currentDriverMarker=mMap.addMarker(driverPositionOptions);
         sendRequestButton=new Button(getActivity());
         View mapFragmentView=getView();
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            mapClickListener=(ClientMapClickListener) context;
+        } catch (ClassCastException e){
+            Log.e("ClientMapFragment",e.toString());
+        }
+
     }
 }

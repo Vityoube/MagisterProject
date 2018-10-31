@@ -36,7 +36,6 @@ public class CreateRequestFragment extends DialogFragment {
 
     public interface CreateRequestFragmentListener {
         public void onSubmitClick(DialogFragment dialogFragment);
-        public void onSelectLocationClick();
     }
 
     private CreateRequestFragmentListener listener;

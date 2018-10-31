@@ -1,13 +1,18 @@
 package vkalashnykov.org.busapplication;
 
+import android.Manifest;
 import android.app.DialogFragment;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,9 +21,14 @@ import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.places.PlaceDetectionClient;
+import com.google.android.gms.location.places.PlaceFilter;
 import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -36,7 +46,8 @@ import vkalashnykov.org.busapplication.fragment.OnChooseRouteFromListListener;
 
 @SuppressWarnings("deprecation")
 public class ClientMainActivity extends FragmentActivity implements OnChooseRouteFromListListener,
-        CreateRequestFragment.CreateRequestFragmentListener
+        CreateRequestFragment.CreateRequestFragmentListener,
+        ClientMapFragment.ClientMapClickListener
     {
         // TODO: Add possibilty to add Request to Driver
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -67,7 +78,9 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
     private ValueEventListener updateRouteListener;
     private ClientMapFragment mapFragment;
     private Button createRequestButton;
-    int PLACE_PICKER_REQUEST=1;
+    private EditText locationOnRequest;
+//    private LatLng placeRequestLatLng;
+    private Marker requestLocationMarker;
 
         @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,15 +129,7 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                     Point driverPosition=dataSnapshot.getValue(Point.class);
                     mapFragment.createDriverPositionMarker(driverPosition);
-                    createRequestButton=findViewById(R.id.createRequest);
-                    createRequestButton.setEnabled(true);
-                    createRequestButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            CreateRequestFragment createRequestFragment=new CreateRequestFragment();
-                            createRequestFragment.show(getFragmentManager(),"request");
-                        }
-                    });
+
                 }
 
                 @Override
@@ -148,12 +153,14 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
             updateRouteListener=new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    mapFragment.setRouteRef(selectedRouteRef);
                     ArrayList<Point> route=new ArrayList<Point>();
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()){
                         Point point=snapshot.getValue(Point.class);
                         route.add(point);
                     }
                     mapFragment.updateRoute(route);
+
                 }
 
                 @Override
@@ -176,17 +183,41 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
         }
 
         @Override
-        public void onSelectLocationClick() {
-            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+        public void clickOnMap(Marker marker) {
+            if (selectedRouteRef!=null){
+//                placeRequestLatLng=latLng;
+                requestLocationMarker=marker;
 
-            try {
-                startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
-            } catch (GooglePlayServicesRepairableException e) {
-                Log.e("ClientPlaces","GooglePlayServicesRepairableException",e);
-            } catch (GooglePlayServicesNotAvailableException e) {
-                Log.e("ClientPlaces","GooglePlayServicesNotAvailableException",e);
+                createRequestButton=findViewById(R.id.createRequest);
+                createRequestButton.setEnabled(true);
+                createRequestButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        CreateRequestFragment createRequestFragment=new CreateRequestFragment();
+                        createRequestFragment.show(getFragmentManager(),"request");
+                    }
+                });
             }
         }
 
 
+//        @Override
+//        public void onMapReady(GoogleMap googleMap) {
+//            this.mMap = googleMap;
+//            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+//                    != PackageManager.PERMISSION_GRANTED) {
+//
+//                ActivityCompat.requestPermissions(this,
+//                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
+//
+//            }
+//            mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+//                @Override
+//                public void onMapClick(LatLng latLng) {
+//                    placeRequestLatLng=latLng;
+//                    Toast.makeText(ClientMainActivity.this,"Selected location: "+
+//                    placeRequestLatLng.toString(),Toast.LENGTH_SHORT);
+//                }
+//            });
+//        }
     }

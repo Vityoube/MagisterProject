@@ -14,42 +14,14 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:text="@string/location" />
 
-    <fragment
-        android:id="@+id/mapCientRequest"
-        android:name="vkalashnykov.org.busapplication.fragment.ClientMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="50"
-        android:tag="request">
-    </fragment>
-
-
-    <!--<LinearLayout-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_weight="0.05"-->
-        <!--android:orientation="horizontal"-->
-        <!--android:weightSum="10">-->
-
-
-        <!--<EditText-->
-            <!--android:id="@+id/location"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="6"-->
-            <!--android:ems="10"-->
-            <!--android:inputType="text"-->
-            <!--android:enabled="false"/>-->
-
-        <!--<Button-->
-            <!--android:id="@+id/locationButton"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="4"-->
-            <!--android:background="@color/colorPrimary"-->
-            <!--android:text="@string/location" />-->
-
-    <!--</LinearLayout>-->
+        <EditText
+            android:id="@+id/location"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0.4"
+            android:ems="10"
+            android:inputType="textMultiLine"
+            android:enabled="false"/>
 
     <TextView
         android:id="@+id/commentsLabel"
@@ -63,7 +35,7 @@
         android:id="@+id/comments"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="0.3"
+        android:layout_weight="0.5"
         android:ems="10"
         android:inputType="textMultiLine"
         android:maxLength="255"/>

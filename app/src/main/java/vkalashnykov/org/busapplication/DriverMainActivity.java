@@ -137,4 +137,9 @@ public class DriverMainActivity extends FragmentActivity{
     }
 
 
+    public void goToAddNewRoute(View view) {
+        Intent goToAddNewRouteActivityIntent=new Intent(this,DriverNewRouteActivity.class);
+        goToAddNewRouteActivityIntent.putExtra("DRIVER_KEY",driverKey);
+        startActivity(goToAddNewRouteActivityIntent);
+    }
 }

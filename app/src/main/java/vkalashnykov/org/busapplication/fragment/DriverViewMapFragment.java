@@ -18,6 +18,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.location.places.GeoDataApi;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -34,7 +35,8 @@ import java.util.ArrayList;
 import vkalashnykov.org.busapplication.api.domain.Position;
 
 public class DriverViewMapFragment extends MapFragment implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener, OnMapReadyCallback {
+        GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener,
+        OnMapReadyCallback {
 
     private com.google.android.gms.maps.model.LatLng currentPlaceSelection = null;
     private ArrayList<LatLng> markerPoints = new ArrayList();

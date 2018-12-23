@@ -29,8 +29,8 @@
 
         <activity
             android:name=".LoginActivity"
-            android:theme="@style/Base.Theme.AppCompat.Light"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:theme="@style/Base.Theme.AppCompat.Light">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -52,7 +52,8 @@
         <activity
             android:name=".ClientUserDetailsActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".ClientCreateRequestActivity"></activity>
+        <activity android:name=".ClientCreateRequestActivity" />
+        <activity android:name=".DriverNewRouteActivity" />
     </application>
 
 </manifest>

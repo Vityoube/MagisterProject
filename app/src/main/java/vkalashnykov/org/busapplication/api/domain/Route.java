@@ -7,27 +7,17 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Route implements Serializable{
-    private ArrayList<Marker> markers;
-    private ArrayList<Polyline> lines;
+    private ArrayList<Position> points;
 
-    public Route(){
-        markers=new ArrayList<>();
-        lines=new ArrayList<>();
+    public Route(ArrayList<Position> points) {
+        this.points = new ArrayList<>();
     }
 
-    public ArrayList<Marker> getMarkers() {
-        return markers;
+    public ArrayList<Position> getPoints() {
+        return points;
     }
 
-    public void setMarkers(ArrayList<Marker> markers) {
-        this.markers = markers;
-    }
-
-    public ArrayList<Polyline> getLines() {
-        return lines;
-    }
-
-    public void setLines(ArrayList<Polyline> lines) {
-        this.lines = lines;
+    public void setPoints(ArrayList<Position> points) {
+        this.points = points;
     }
 }

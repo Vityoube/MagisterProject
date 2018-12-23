@@ -44,8 +44,6 @@
     <string name="cancel">Cancel</string>
     <string name="location">Location</string>
     <string name="submit">Submit</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="new_route">Add new route</string>
 
 </resources>

@@ -59,14 +59,15 @@
             </fragment>
 
             <Button
-                android:id="@+id/addPoint"
+                android:id="@+id/newRoute"
                 android:layout_width="wrap_content"
                 android:layout_height="0dp"
                 android:layout_gravity="center"
                 android:layout_weight=".10"
                 android:backgroundTint="@color/colorPrimary"
-                android:text="@string/add_point"
-                android:visibility="visible" />
+                android:text="@string/new_route"
+                android:visibility="visible"
+                android:onClick="goToAddNewRoute"/>
 
 
 

@@ -1,49 +1,33 @@
 package vkalashnykov.org.busapplication.api.domain;
 
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.Polyline;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
 public class Route implements Serializable{
-    private String driverName;
-    private ArrayList<Point> route;
-    private Point currentPosition;
+    private ArrayList<Marker> markers;
+    private ArrayList<Polyline> lines;
 
-    public Route() {
-        route=new ArrayList<>();
+    public Route(){
+        markers=new ArrayList<>();
+        lines=new ArrayList<>();
     }
 
-    public Route(String driverName, ArrayList<Point> route) {
-        this.driverName = driverName;
-        this.route = route;
+    public ArrayList<Marker> getMarkers() {
+        return markers;
     }
 
-    public Route(String driverName, ArrayList<Point> route, Point currentPosition) {
-        this.driverName = driverName;
-        this.route = route;
+    public void setMarkers(ArrayList<Marker> markers) {
+        this.markers = markers;
     }
 
-    public String getDriverName() {
-        return driverName;
+    public ArrayList<Polyline> getLines() {
+        return lines;
     }
 
-    public void setDriverName(String driverName) {
-        this.driverName = driverName;
+    public void setLines(ArrayList<Polyline> lines) {
+        this.lines = lines;
     }
-
-    public ArrayList<Point> getRoute() {
-        return route;
-    }
-
-    public void setRoute(ArrayList<Point> route) {
-        this.route = route;
-    }
-
-    public Point getCurrentPosition() {
-        return currentPosition;
-    }
-
-    public void setCurrentPosition(Point currentPosition) {
-        this.currentPosition = currentPosition;
-    }
-
 }

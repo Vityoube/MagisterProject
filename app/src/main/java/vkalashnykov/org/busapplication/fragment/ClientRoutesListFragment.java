@@ -49,7 +49,7 @@ public class ClientRoutesListFragment extends ListFragment {
             @Override
             protected void populateView(View v, Route model, int position) {
                 TextView routeDriverName=v.findViewById(R.id.driverName);
-                routeDriverName.setText(model.getDriverName());
+//                routeDriverName.setText(model.getDriverName());
             }
         };
         ListView routesList=getListView();

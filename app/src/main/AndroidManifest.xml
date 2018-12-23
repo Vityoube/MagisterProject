@@ -41,7 +41,7 @@
             android:name=".SignupActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".MainActivity"
+            android:name=".DriverMainActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".UserDetailsActivity"

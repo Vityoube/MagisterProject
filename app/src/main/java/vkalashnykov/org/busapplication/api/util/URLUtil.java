@@ -11,7 +11,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import vkalashnykov.org.busapplication.api.domain.Point;
+import vkalashnykov.org.busapplication.api.domain.Position;
 
 public class URLUtil {
 
@@ -49,11 +49,11 @@ public class URLUtil {
         }
         return data;
     }
-    public List<String> getDirectionsUrl(ArrayList<Point> markerPoints) {
+    public List<String> getDirectionsUrl(ArrayList<Position> markerPositions) {
         List<String> mUrls = new ArrayList<>();
-        if (markerPoints.size() > 1) {
-            String str_origin = markerPoints.get(0).getLatitude() + "," + markerPoints.get(0).getLongitude();
-            String str_dest = markerPoints.get(1).getLatitude()  + "," + markerPoints.get(1).getLongitude();
+        if (markerPositions.size() > 1) {
+            String str_origin = markerPositions.get(0).getLatitude() + "," + markerPositions.get(0).getLongitude();
+            String str_dest = markerPositions.get(1).getLatitude()  + "," + markerPositions.get(1).getLongitude();
 
             String sensor = "sensor=false";
             String parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
@@ -61,10 +61,10 @@ public class URLUtil {
             String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
 
             mUrls.add(url);
-            for (int i = 2; i < markerPoints.size(); i++)//loop starts from 2 because 0 and 1 are already printed
+            for (int i = 2; i < markerPositions.size(); i++)//loop starts from 2 because 0 and 1 are already printed
             {
                 str_origin = str_dest;
-                str_dest = markerPoints.get(i).getLatitude()  + "," + markerPoints.get(i).getLongitude();
+                str_dest = markerPositions.get(i).getLatitude()  + "," + markerPositions.get(i).getLongitude();
                 parameters = "origin=" + str_origin + "&destination=" + str_dest + "&" + sensor;
                 url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
                 mUrls.add(url);

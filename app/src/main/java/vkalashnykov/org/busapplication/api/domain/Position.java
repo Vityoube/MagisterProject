@@ -2,14 +2,14 @@ package vkalashnykov.org.busapplication.api.domain;
 
 import java.io.Serializable;
 
-public class Point implements Serializable{
+public class Position implements Serializable{
     private Double latitude;
     private Double longitude;
 
-    public Point() {
+    public Position() {
     }
 
-    public Point(Double latitude, Double longitude) {
+    public Position(Double latitude, Double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
     }

@@ -8,8 +8,9 @@ public class Driver {
     private String lastName;
     private int age;
     private int busSize;
-    private ArrayList<Point> route;
-    private Point currentPosition;
+    private ArrayList<Position> route;
+    private Position currentPosition;
+    private ArrayList<Route> routes;
 
     public Driver() {
     }
@@ -21,6 +22,7 @@ public class Driver {
         this.age = age;
         this.busSize = busSize;
         route=new ArrayList<>();
+        routes=new ArrayList<>();
     }
 
     public String getUsername() {
@@ -63,19 +65,27 @@ public class Driver {
         this.busSize = busSize;
     }
 
-    public ArrayList<Point> getRoute() {
+    public ArrayList<Position> getRoute() {
         return route;
     }
 
-    public void setRoute(ArrayList<Point> route) {
+    public void setRoute(ArrayList<Position> route) {
         this.route = route;
     }
 
-    public Point getCurrentPosition() {
+    public Position getCurrentPosition() {
         return currentPosition;
     }
 
-    public void setCurrentPosition(Point currentPosition) {
+    public void setCurrentPosition(Position currentPosition) {
         this.currentPosition = currentPosition;
+    }
+
+    public ArrayList<Route> getRoutes() {
+        return routes;
+    }
+
+    public void setRoutes(ArrayList<Route> routes) {
+        this.routes = routes;
     }
 }

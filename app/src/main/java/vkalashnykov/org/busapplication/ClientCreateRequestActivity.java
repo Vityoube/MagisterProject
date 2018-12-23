@@ -5,12 +5,12 @@ import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -27,7 +27,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -51,9 +50,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import vkalashnykov.org.busapplication.api.domain.Point;
+import vkalashnykov.org.busapplication.api.domain.Position;
 import vkalashnykov.org.busapplication.api.domain.Request;
-import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class ClientCreateRequestActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,LocationListener, OnMapReadyCallback {
@@ -66,11 +64,11 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
     private FirebaseAuth.AuthStateListener mAuthListener;
     private final FirebaseDatabase database=FirebaseDatabase.getInstance();
     private static final String BUS = "BusApplication";
-    private Point selectedLocation;
+    private Position selectedLocation;
     private String comments;
     private String intentDriverName;
     private String clientKey,driverKey;
-    private LatLng currentPlaceSelection;
+    private com.google.android.gms.maps.model.LatLng currentPlaceSelection;
     private ArrayList<Marker> currentRoute;
     private ArrayList<com.google.android.gms.maps.model.Polyline> currentRouteLines;
 
@@ -153,12 +151,12 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
                     }
                 }
                 currentRoute=new ArrayList<>();
-                Route driverRoute=dataSnapshot.getValue(Route.class);
-                for (Point point: driverRoute.getRoute()){
-                    MarkerOptions routeMarker =new MarkerOptions();
-                    routeMarker.position(new LatLng(point.getLatitude(),point.getLongitude()));
-                    currentRoute.add(googleMap.addMarker(routeMarker));
-                }
+//                Route driverRoute=dataSnapshot.getValue(Route.class);
+//                for (Position point: driverRoute.getRoute()){
+//                    MarkerOptions routeMarker =new MarkerOptions();
+//                    routeMarker.position(new com.google.android.gms.maps.model.LatLng(point.getLatitude(),point.getLongitude()));
+//                    currentRoute.add(googleMap.addMarker(routeMarker));
+//                }
             }
 
             @Override
@@ -169,7 +167,7 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
         });
         googleMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
-            public void onMapClick(LatLng latLng) {
+            public void onMapClick(com.google.android.gms.maps.model.LatLng latLng) {
                 String apiKey="AIzaSyAcwyEytYneiCAeth4iXI8iMyatyHUkN5U";
                 String placeUrl="https://maps.googleapis.com/maps/api/place/nearbysearch/json?location="+
                         latLng.latitude+","+latLng.longitude+"&radius=10&type=bus_station&key="+apiKey;
@@ -204,7 +202,7 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
 
         double currentLatitude = location.getLatitude();
         double currentLongitude = location.getLongitude();
-        LatLng latLng = new LatLng(currentLatitude, currentLongitude);
+        com.google.android.gms.maps.model.LatLng latLng = new com.google.android.gms.maps.model.LatLng(currentLatitude, currentLongitude);
         googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14));
     }
 
@@ -280,7 +278,7 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
                     MarkerOptions positionMarker=new MarkerOptions();
                     positionMarker.position(currentPlaceSelection);
                     googleMap.addMarker(positionMarker);
-                    selectedLocation=new Point(currentPlaceSelection.latitude,currentPlaceSelection.longitude);
+                    selectedLocation=new Position(currentPlaceSelection.latitude,currentPlaceSelection.longitude);
                 }
             } catch (JSONException e) {
                 e.printStackTrace();

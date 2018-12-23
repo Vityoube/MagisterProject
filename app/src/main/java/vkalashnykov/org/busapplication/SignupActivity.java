@@ -128,7 +128,7 @@ public class SignupActivity extends AppCompatActivity {
                                                     Log.d(BUS, "Successfully write to Database user: " + username.getText().toString());
                                                     Toast.makeText(SignupActivity.this, R.string.sign_up_success,
                                                             Toast.LENGTH_SHORT).show();
-                                                    final Intent intent = new Intent(SignupActivity.this, MainActivity.class);
+                                                    final Intent intent = new Intent(SignupActivity.this, DriverMainActivity.class);
                                                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                                     intent.putExtra("USER_EMAIL", email);
                                                     driversRef.addListenerForSingleValueEvent(new ValueEventListener() {

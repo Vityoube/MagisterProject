@@ -24,7 +24,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 
 @SuppressWarnings("deprecation")
-public class MainActivity extends FragmentActivity{
+public class DriverMainActivity extends FragmentActivity{
 
 //TODO: add possibilty to List Requests and change their status
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -41,7 +41,7 @@ public class MainActivity extends FragmentActivity{
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     GoogleMap mMap;
-    private ArrayList<vkalashnykov.org.busapplication.api.domain.Point> markerPoints = new ArrayList();
+    private ArrayList<LatLng> markerPoints = new ArrayList();
     private boolean editMap = false;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference routesRef;

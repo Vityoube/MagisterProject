@@ -1,14 +1,10 @@
 package vkalashnykov.org.busapplication;
 
-import android.Manifest;
 import android.app.DialogFragment;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -17,18 +13,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.PlaceFilter;
-import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -38,7 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
-import vkalashnykov.org.busapplication.api.domain.Point;
+import vkalashnykov.org.busapplication.api.domain.Position;
 import vkalashnykov.org.busapplication.api.domain.Route;
 import vkalashnykov.org.busapplication.fragment.ClientMapFragment;
 import vkalashnykov.org.busapplication.fragment.CreateRequestFragment;
@@ -72,7 +60,7 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
     private ArrayList<Marker> currentRoute;
     private ArrayList<com.google.android.gms.maps.model.Polyline> currentRouteLines;
     private DatabaseReference selectedRouteRef;
-    private Point driverPosition;
+    private Position driverPosition;
     private ValueEventListener createMarkerListener;
     private ValueEventListener updateMarkerListener;
     private ValueEventListener updateRouteListener;
@@ -127,8 +115,8 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
             createMarkerListener=new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    Point driverPosition=dataSnapshot.getValue(Point.class);
-                    mapFragment.createDriverPositionMarker(driverPosition);
+                    Position driverPosition=dataSnapshot.getValue(Position.class);
+//                    mapFragment.createDriverPositionMarker(driverPosition);
 
                 }
 
@@ -141,8 +129,8 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
             updateMarkerListener=new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    driverPosition=(Point) dataSnapshot.getValue(Point.class);
-                    mapFragment.updateDriverPosition(driverPosition);
+                    driverPosition=(Position) dataSnapshot.getValue(Position.class);
+//                    mapFragment.updateDriverPosition(driverPosition);
                 }
 
                 @Override
@@ -150,24 +138,24 @@ public class ClientMainActivity extends FragmentActivity implements OnChooseRout
                     Log.e("ClientMapDriverPosition",databaseError.getMessage());
                 }
             };
-            updateRouteListener=new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                    mapFragment.setRouteRef(selectedRouteRef);
-                    ArrayList<Point> route=new ArrayList<Point>();
-                    for (DataSnapshot snapshot : dataSnapshot.getChildren()){
-                        Point point=snapshot.getValue(Point.class);
-                        route.add(point);
-                    }
-                    mapFragment.updateRoute(route);
-
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError databaseError) {
-                    Log.e("ClientMapRoute",databaseError.getMessage());
-                }
-            };
+//            updateRouteListener=new ValueEventListener() {
+//                @Override
+//                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                    mapFragment.setRouteRef(selectedRouteRef);
+//                    ArrayList<Position> route=new ArrayList<Position>();
+//                    for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+//                        LatLng point=snapshot.getValue(LatLng.class);
+//                        route.add(point);
+//                    }
+//                    mapFragment.updateRoute(route);
+//
+//                }
+//
+//                @Override
+//                public void onCancelled(@NonNull DatabaseError databaseError) {
+//                    Log.e("ClientMapRoute",databaseError.getMessage());
+//                }
+//            };
             selectedRouteRef=FirebaseDatabase.getInstance().getReference("routes").child(routeKey);
             selectedRouteRef.child("currentPosition").
                     addListenerForSingleValueEvent(createMarkerListener);

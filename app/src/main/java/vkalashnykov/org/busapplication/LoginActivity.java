@@ -111,7 +111,7 @@ public class LoginActivity extends AppCompatActivity {
 
                                 final Intent intent=
                                         new Intent(LoginActivity.this,
-                                                MainActivity.class);
+                                                DriverMainActivity.class);
                                 driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(DataSnapshot dataSnapshot) {

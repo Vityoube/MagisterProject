@@ -3,6 +3,7 @@ package vkalashnykov.org.busapplication;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Looper;
@@ -11,6 +12,16 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.akexorcist.googledirection.DirectionCallback;
+import com.akexorcist.googledirection.GoogleDirection;
+import com.akexorcist.googledirection.config.GoogleDirectionConfiguration;
+import com.akexorcist.googledirection.constant.TransportMode;
+import com.akexorcist.googledirection.model.Direction;
+import com.akexorcist.googledirection.model.Leg;
+import com.akexorcist.googledirection.model.Route;
+import com.akexorcist.googledirection.model.Step;
+import com.akexorcist.googledirection.request.DirectionDestinationRequest;
+import com.akexorcist.googledirection.util.DirectionConverter;
 import com.google.android.gms.common.api.GoogleApi;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationCallback;
@@ -25,19 +36,26 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class DriverNewRouteActivity extends AppCompatActivity
         implements OnMapReadyCallback, android.location.LocationListener {
     private GoogleMap map;
     private DatabaseReference driverRef;
     private LocationManager locationManager;
-    LocationRequest mLocationRequest;
-    GoogleApiClient mGoogleApiClient;
-    LatLng currentPosition;
+    private List<Marker> addedMarkers;
+    private List<Polyline> polylines;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,45 +65,34 @@ public class DriverNewRouteActivity extends AppCompatActivity
                 != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1600);
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
         }
-        locationManager=(LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        SupportMapFragment mapFragment=
-                (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.driverNewRouteMap);
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.driverNewRouteMap);
         mapFragment.getMapAsync(this);
-        String driverKey=getIntent().getStringExtra("DRIVER_KEY");
-        driverRef= FirebaseDatabase.getInstance().getReference().child("drivers").child(driverKey);
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .addApi(LocationServices.API)
-//                .build();
-//        mLocationRequest = LocationRequest.create()
-//                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-//                .setInterval(10 * 1000)        // 10 seconds, in milliseconds
-//                .setFastestInterval(1 * 1000);
-//        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-//        builder.addLocationRequest(mLocationRequest);
-//        LocationSettingsRequest locationSettingsRequest = builder.build();
-//
-//        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
-//        settingsClient.checkLocationSettings(locationSettingsRequest);
-//        LocationServices.getFusedLocationProviderClient(this).
+        String driverKey = getIntent().getStringExtra("DRIVER_KEY");
+        driverRef = FirebaseDatabase.getInstance().getReference().child("drivers").child(driverKey);
+        addedMarkers = new ArrayList<>();
+        polylines=new ArrayList<>();
+        GoogleDirectionConfiguration.getInstance().setLogEnabled(true);
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        map=googleMap;
+        map = googleMap;
         if (ContextCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED) {
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
 
         }
-        final LatLngBounds bounds=new LatLngBounds(
+        final LatLngBounds bounds = new LatLngBounds(
                 new LatLng(49.452007, 14.362359),
                 new LatLng(54.410894, 22.843805)
-                );
+        );
         map.setLatLngBoundsForCameraTarget(bounds);
         map.setMyLocationEnabled(true);
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
@@ -95,10 +102,55 @@ public class DriverNewRouteActivity extends AppCompatActivity
             locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, this,
                     Looper.myLooper());
         else {
-            LatLng centerPoland=new LatLng(52.0693234,19.4781172);
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(centerPoland,7));
+            LatLng centerPoland = new LatLng(52.0693234, 19.4781172);
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(centerPoland, 7));
         }
+        map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                MarkerOptions options = new MarkerOptions();
+                options.position(latLng);
+                if (addedMarkers.isEmpty())
+                    options.icon(BitmapDescriptorFactory.defaultMarker(
+                            BitmapDescriptorFactory.HUE_GREEN));
+                else if (addedMarkers.size()==1)
+                    options.icon(BitmapDescriptorFactory.defaultMarker(
+                            BitmapDescriptorFactory.HUE_CYAN));
+                else{
+                    options.icon(BitmapDescriptorFactory.defaultMarker(
+                            BitmapDescriptorFactory.HUE_RED));
+                    addedMarkers.get(addedMarkers.size()-1).
+                            setIcon(BitmapDescriptorFactory.
+                                    defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+                }
 
+                addedMarkers.add(map.addMarker(options));
+                updateRoute();
+            }
+        });
+        map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                marker.remove();
+                addedMarkers.remove(addedMarkers.indexOf(marker));
+                for (int i = 0; i < addedMarkers.size(); i++) {
+                    if (i == 0)
+                        addedMarkers.get(i).setIcon(BitmapDescriptorFactory
+                                .defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                    else if (i == addedMarkers.size() - 1)
+                        addedMarkers.get(i).setIcon(BitmapDescriptorFactory
+                                .defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                    else
+                        addedMarkers.get(i).setIcon(BitmapDescriptorFactory
+                                .defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+                }
+                for (Polyline polyline : polylines)
+                    polyline.remove();
+                polylines.clear();
+                updateRoute();
+                return false;
+            }
+        });
 
 
     }
@@ -106,7 +158,7 @@ public class DriverNewRouteActivity extends AppCompatActivity
     @Override
     public void onLocationChanged(Location location) {
         LatLng currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition,7));
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 7));
     }
 
     @Override
@@ -122,5 +174,52 @@ public class DriverNewRouteActivity extends AppCompatActivity
     @Override
     public void onProviderDisabled(String provider) {
 
+    }
+
+    public void updateRoute() {
+        if (!addedMarkers.isEmpty() && addedMarkers.size() > 1) {
+            LatLng origin = addedMarkers.get(0).getPosition();
+            LatLng destination = addedMarkers.get(addedMarkers.size() - 1).getPosition();
+            List<LatLng> waypoints = new ArrayList<>();
+            if (addedMarkers.size() > 2) {
+                for (int i = 1; i < addedMarkers.size() - 1; i++) {
+                    waypoints.add(addedMarkers.get(i).getPosition());
+                }
+            }
+            DirectionDestinationRequest directionRequest = GoogleDirection
+                    .withServerKey(getString(R.string.api_key))
+                    .from(origin);
+            if (!waypoints.isEmpty())
+                directionRequest.and(waypoints);
+            directionRequest
+                    .to(destination)
+                    .transportMode(TransportMode.DRIVING)
+                    .execute(new DirectionCallback() {
+                        @Override
+                        public void onDirectionSuccess(Direction direction, String rawBody) {
+                            if (direction.isOK()) {
+                                Route route = direction.getRouteList().get(0);
+                                for (Leg leg : route.getLegList()) {
+                                    List<Step> directionPoints = leg.getStepList();
+                                    ArrayList<PolylineOptions> polylinesOptions =
+                                            DirectionConverter.createTransitPolyline(
+                                                    DriverNewRouteActivity.this,
+                                                    directionPoints,
+                                                    5, Color.GREEN,
+                                                    5,Color.GREEN);
+                                    for (PolylineOptions polylineOptions: polylinesOptions)
+                                        polylines.add(map.addPolyline(polylineOptions));
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onDirectionFailure(Throwable t) {
+
+                        }
+                    });
+
+
+        }
     }
 }

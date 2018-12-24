@@ -1,6 +1,10 @@
 package vkalashnykov.org.busapplication.api.domain;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Driver {
     private String username;
@@ -11,6 +15,7 @@ public class Driver {
     private ArrayList<Position> route;
     private Position currentPosition;
     private ArrayList<Route> routes;
+    SimpleDateFormat timeFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public Driver() {
     }
@@ -85,7 +90,14 @@ public class Driver {
         return routes;
     }
 
-    public void setRoutes(ArrayList<Route> routes) {
+    public void setRoutes(ArrayList<Route>  routes) {
         this.routes = routes;
     }
+
+    public void addRoute(Route route){
+        if (routes==null)
+            routes=new ArrayList<>();
+        routes.add(route);
+    }
+
 }

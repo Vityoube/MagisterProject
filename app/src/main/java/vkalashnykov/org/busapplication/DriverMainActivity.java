@@ -122,12 +122,12 @@ public class DriverMainActivity extends FragmentActivity{
 
     public void signout(View view) {
         mAuth.signOut();
-        finish();
-//        Intent intent = new Intent(this, LoginActivity.class);
-//        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//        startActivity(intent);
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
         Toast.makeText(this, R.string.logout_success,
                 Toast.LENGTH_SHORT).show();
+        finish();
     }
 
 

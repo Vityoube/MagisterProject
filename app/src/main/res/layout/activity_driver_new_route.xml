@@ -16,6 +16,24 @@
             android:layout_weight="0.8"
             android:id="@+id/driverNewRouteMap"
             android:name="com.google.android.gms.maps.SupportMapFragment"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp" android:layout_weight="0.2"
+            android:orientation="horizontal"
+            android:weightSum="100">
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:text="@string/cancel"
+                android:onClick="cancel"/>
+            <Button
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:text="@string/save_route"
+                android:onClick="saveRoute"/>
+        </LinearLayout>
 
     </LinearLayout>
 

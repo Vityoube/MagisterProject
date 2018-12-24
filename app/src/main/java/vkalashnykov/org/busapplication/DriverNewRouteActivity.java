@@ -2,15 +2,18 @@ package vkalashnykov.org.busapplication;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Bundle;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+import android.view.View;
 
 import com.akexorcist.googledirection.DirectionCallback;
 import com.akexorcist.googledirection.GoogleDirection;
@@ -22,16 +25,6 @@ import com.akexorcist.googledirection.model.Route;
 import com.akexorcist.googledirection.model.Step;
 import com.akexorcist.googledirection.request.DirectionDestinationRequest;
 import com.akexorcist.googledirection.util.DirectionConverter;
-import com.google.android.gms.common.api.GoogleApi;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -43,11 +36,17 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import vkalashnykov.org.busapplication.api.domain.Driver;
+import vkalashnykov.org.busapplication.api.domain.Position;
 
 public class DriverNewRouteActivity extends AppCompatActivity
         implements OnMapReadyCallback, android.location.LocationListener {
@@ -221,5 +220,44 @@ public class DriverNewRouteActivity extends AppCompatActivity
 
 
         }
+    }
+
+    public void cancel(View view) {
+        Intent cancelIntent=new Intent();
+        cancelIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        setResult(RESULT_CANCELED,cancelIntent);
+        finish();
+    }
+
+
+    public void saveRoute(View view) {
+        if (addedMarkers.size()>1){
+            driverRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    Driver driver=dataSnapshot.getValue(Driver.class);
+                    ArrayList<Position> points=new ArrayList<>();
+                    for (Marker marker : addedMarkers){
+                        Position point=new Position(
+                                marker.getPosition().latitude,
+                                marker.getPosition().longitude
+                        );
+                        points.add(point);
+                    }
+                    vkalashnykov.org.busapplication.api.domain.Route route=
+                            new vkalashnykov.org.busapplication.api.domain.Route(points);
+                    driver.addRoute(route);
+                    driverRef.setValue(driver);
+                    setResult(RESULT_OK);
+                    finish();
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
+
     }
 }

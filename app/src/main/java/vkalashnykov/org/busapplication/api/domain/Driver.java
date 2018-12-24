@@ -15,7 +15,6 @@ public class Driver {
     private ArrayList<Position> route;
     private Position currentPosition;
     private ArrayList<Route> routes;
-    SimpleDateFormat timeFormat=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public Driver() {
     }

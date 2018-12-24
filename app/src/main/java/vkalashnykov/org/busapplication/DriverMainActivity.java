@@ -29,6 +29,7 @@ public class DriverMainActivity extends FragmentActivity{
 //TODO: add possibilty to List Requests and change their status
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     private static final String BUS = "BusApplication";
+    private static final int ADD_NEW_ROUTE_REQUEST = 1;
     TextView welcomeMessage;
 
     private FirebaseAuth mAuth;
@@ -121,9 +122,10 @@ public class DriverMainActivity extends FragmentActivity{
 
     public void signout(View view) {
         mAuth.signOut();
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(intent);
+        finish();
+//        Intent intent = new Intent(this, LoginActivity.class);
+//        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//        startActivity(intent);
         Toast.makeText(this, R.string.logout_success,
                 Toast.LENGTH_SHORT).show();
     }
@@ -140,6 +142,6 @@ public class DriverMainActivity extends FragmentActivity{
     public void goToAddNewRoute(View view) {
         Intent goToAddNewRouteActivityIntent=new Intent(this,DriverNewRouteActivity.class);
         goToAddNewRouteActivityIntent.putExtra("DRIVER_KEY",driverKey);
-        startActivity(goToAddNewRouteActivityIntent);
+        startActivityForResult(goToAddNewRouteActivityIntent,ADD_NEW_ROUTE_REQUEST);
     }
 }

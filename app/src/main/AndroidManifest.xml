@@ -44,7 +44,7 @@
             android:name=".DriverMainActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".UserDetailsActivity"
+            android:name=".DriverUserDetailsActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ClientMainActivity"

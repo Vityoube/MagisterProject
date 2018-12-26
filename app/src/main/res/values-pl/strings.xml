@@ -47,5 +47,11 @@
     <string name="new_route">Dodaj nową trasę</string>
     <string name="select_route">Wybierz trasę</string>
     <string name="route_history">Z historii</string>
+    <string name="trunkCapacity">Pojemność bagażnika</string>
+    <string name="salonCapacity">Pojemność bagażu w salonie</string>
+    <string name="seatsNumber" >Ilość miejsc</string>
+    <string name="minimumSeatsNumber">Najmniejsza potrzebna ilość pasażerów dla podróży</string>
+    <string name="minimumSeatsNumberShortened">Najmniejsza liczba pasażerów</string>
+    <string name="modify">Edytuj</string>
 
 </resources>

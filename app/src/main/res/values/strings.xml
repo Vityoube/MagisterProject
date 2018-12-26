@@ -47,5 +47,11 @@
     <string name="new_route">Add new route</string>
     <string name="select_route">Select route</string>
     <string name="route_history">From history</string>
+    <string name="trunkCapacity">Trunk capacity</string>
+    <string name="salonCapacity">Salon trunk capacity</string>
+    <string name="seatsNumber" >Number of seats</string>
+    <string name="minimumSeatsNumber">Minimum number of seats to go</string>
+    <string name="minimumSeatsNumberShortened">Min seats number</string>
+    <string name="modify">Modify</string>
 
 </resources>

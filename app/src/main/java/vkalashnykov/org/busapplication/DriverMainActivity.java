@@ -60,6 +60,7 @@ public class DriverMainActivity extends FragmentActivity
 
     //TODO: add possibilty to List Requests and change their status
     private static final int ADD_NEW_ROUTE_REQUEST = 1;
+    private static final int CHOOSE_ROUTE_FROM_HISTORY_REQUEST = 2;
     TextView welcomeMessage;
     private LocationManager locationManager;
     private GoogleMap map;
@@ -212,6 +213,10 @@ public class DriverMainActivity extends FragmentActivity
             if (resultCode == RESULT_OK) {
                 drawRoute();
             }
+        } else if (requestCode == CHOOSE_ROUTE_FROM_HISTORY_REQUEST) {
+            if (resultCode == RESULT_OK) {
+                drawRoute();
+            }
         }
     }
 
@@ -224,10 +229,10 @@ public class DriverMainActivity extends FragmentActivity
                         ArrayList<Position> points = new ArrayList<>();
                         for (DataSnapshot pointSnapshot : routesListSnapshot.child(
                                 String.valueOf(routesListSnapshot.getChildrenCount() - 1))
-                                .child("points").getChildren()){
-                            double latitude=pointSnapshot.child("latitude").getValue(Double.class);
-                            double longitude=pointSnapshot.child("longitude").getValue(Double.class);
-                            Position point=new Position(latitude,longitude);
+                                .child("points").getChildren()) {
+                            double latitude = pointSnapshot.child("latitude").getValue(Double.class);
+                            double longitude = pointSnapshot.child("longitude").getValue(Double.class);
+                            Position point = new Position(latitude, longitude);
                             points.add(point);
                         }
                         LatLng origin = new LatLng(
@@ -249,7 +254,7 @@ public class DriverMainActivity extends FragmentActivity
                             }
                         }
                         for (int i = 0; i < points.size(); i++) {
-                            MarkerOptions markerOptions=new MarkerOptions();
+                            MarkerOptions markerOptions = new MarkerOptions();
                             markerOptions
                                     .position(new LatLng(
                                             points.get(i).getLatitude(),
@@ -307,5 +312,11 @@ public class DriverMainActivity extends FragmentActivity
                 });
 
 
+    }
+
+    public void goToSelectRouteFromHistory(View view) {
+        Intent routesHistoryIntent = new Intent(this, DriverRoutesHistoryActivity.class);
+        routesHistoryIntent.putExtra("DRIVER_KEY", driverKey);
+        startActivityForResult(routesHistoryIntent, CHOOSE_ROUTE_FROM_HISTORY_REQUEST);
     }
 }

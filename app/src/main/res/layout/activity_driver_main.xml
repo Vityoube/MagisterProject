@@ -57,17 +57,37 @@
                 android:layout_weight=".90">
 
             </fragment>
-
-            <Button
-                android:id="@+id/newRoute"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_gravity="center"
-                android:layout_weight=".10"
-                android:backgroundTint="@color/colorPrimary"
-                android:text="@string/new_route"
-                android:visibility="visible"
-                android:onClick="goToAddNewRoute"/>
+                android:layout_weight="0.1"
+                android:orientation="horizontal"
+                android:weightSum="100">
+                <Button
+                    android:id="@+id/newRoute"
+                    android:layout_width="0dp"
+                    android:layout_height="fill_parent"
+                    android:layout_gravity="center"
+                    android:layout_weight="50"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:text="@string/new_route"
+                    android:visibility="visible"
+                    android:onClick="goToAddNewRoute"/>
+                <Button
+                    android:id="@+id/routesHistory"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="50"
+                    android:backgroundTint="@color/colorPrimary"
+                    android:text="@string/route_history"
+                    android:visibility="visible"
+                    android:onClick="goToSelectRouteFromHistory"
+                    android:minHeight="1dp"/>
+
+            </LinearLayout>
+
+
 
 
 

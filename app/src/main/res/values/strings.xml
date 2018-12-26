@@ -45,5 +45,7 @@
     <string name="location">Location</string>
     <string name="submit">Submit</string>
     <string name="new_route">Add new route</string>
+    <string name="select_route">Select route</string>
+    <string name="route_history">From history</string>
 
 </resources>

@@ -1,10 +1,8 @@
 package vkalashnykov.org.busapplication;
 
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -19,7 +17,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 import vkalashnykov.org.busapplication.api.domain.Driver;
-import vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals;
+import vkalashnykov.org.busapplication.layouts.MySeekbar;
 
 public class DriverUserDetailsActivity extends AppCompatActivity {
 
@@ -27,10 +25,10 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
     private String firstNameText, lastNameText, ageText, busSizeText, trunkCapacityText,
     salonCapacityText,minSeatsText;
     private String driverKey;
-    private SeekbarWithIntervals seatsNumberSeekbar;
-    private SeekbarWithIntervals trunkCapacitySeekbar;
-    private SeekbarWithIntervals salonTrunkSeekbar;
-    private SeekbarWithIntervals minimumSeatsSeekbar;
+    private MySeekbar seatsNumberSeekbar;
+    private MySeekbar trunkCapacitySeekbar;
+    private MySeekbar salonTrunkSeekbar;
+    private MySeekbar minimumSeatsSeekbar;
     private EditText firstNameInput;
     private EditText lastNameInput;
     private EditText ageInput;
@@ -95,32 +93,14 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
         firstNameInput = (EditText) findViewById(R.id.firstName);
         lastNameInput = (EditText) findViewById(R.id.lastName);
         ageInput = (EditText) findViewById(R.id.age);
-        seatsNumberSeekbar = (SeekbarWithIntervals) findViewById(R.id.seatsNumber);
-        trunkCapacitySeekbar = (SeekbarWithIntervals) findViewById(R.id.trunkCapacity);
-        salonTrunkSeekbar = (SeekbarWithIntervals) findViewById(R.id.salonCapacity);
-        minimumSeatsSeekbar = (SeekbarWithIntervals) findViewById(R.id.minimumSeatsNumber);
-        fillIntervals(seatsNumberSeekbar, 15);
-        fillIntervals(trunkCapacitySeekbar, 10);
-        fillIntervals(salonTrunkSeekbar, 10);
-        fillIntervals(minimumSeatsSeekbar, 15);
-//        seatsNumberSeekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-//            @Override
-//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-//                updateMinSeatSeekbar(progress);
-//
-//            }
-//
-//            @Override
-//            public void onStartTrackingTouch(SeekBar seekBar) {
-//
-//            }
-//
-//            @Override
-//            public void onStopTrackingTouch(SeekBar seekBar) {
-//
-//            }
-//        });
-
+        seatsNumberSeekbar = (MySeekbar) findViewById(R.id.seatsNumber);
+        trunkCapacitySeekbar = (MySeekbar) findViewById(R.id.trunkCapacity);
+        salonTrunkSeekbar = (MySeekbar) findViewById(R.id.salonCapacity);
+        minimumSeatsSeekbar = (MySeekbar) findViewById(R.id.minimumSeatsNumber);
+        fillIntervals(seatsNumberSeekbar, 50);
+        fillIntervals(trunkCapacitySeekbar, 30);
+        fillIntervals(salonTrunkSeekbar, 30);
+        fillIntervals(minimumSeatsSeekbar, 1);
 
     }
 
@@ -135,34 +115,26 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
         if (seatsNumberSeekbar.getProgress()>0)
             driverRef.child("busSize").setValue(seatsNumberSeekbar.getProgress());
         if (trunkCapacitySeekbar.getProgress()>0)
-        driverRef.child("trunkCapacity").setValue(trunkCapacitySeekbar.getProgress()+1);
+        driverRef.child("trunkCapacity").setValue(trunkCapacitySeekbar.getProgress());
         if (salonTrunkSeekbar.getProgress()>0)
-        driverRef.child("salonCapacity").setValue(salonTrunkSeekbar.getProgress()+1);
+        driverRef.child("salonCapacity").setValue(salonTrunkSeekbar.getProgress());
         if (minimumSeatsSeekbar.getProgress()>0
                 && minimumSeatsSeekbar.getProgress()<=seatsNumberSeekbar.getProgress())
-            driverRef.child("minSeats").setValue(minimumSeatsSeekbar.getProgress()+1);
+            driverRef.child("minSeats").setValue(minimumSeatsSeekbar.getProgress());
         setContentView(R.layout.activity_driver_user_details);
         recreate();
     }
 
-    public void fillIntervals(SeekbarWithIntervals seekbar, int maxNumber) {
+    public void fillIntervals(MySeekbar seekbar, int maxNumber) {
         ArrayList<String> intervals = new ArrayList<>();
         for (int i = 1; i <= maxNumber; i++) {
             intervals.add(String.valueOf(i));
         }
-        seekbar.setIntervals(intervals);
+        seekbar.setMax(intervals);
     }
 
     public void cancel(View view) {
         setContentView(R.layout.activity_driver_user_details);
     }
 
-//    public void updateMinSeatSeekbar(int progress){
-//        minimumSeatsSeekbar.setUpdate(true);
-//        fillIntervals(minimumSeatsSeekbar,progress);
-//        minimumSeatsSeekbar.setProgress(progress);
-//        minimumSeatsSeekbar.updateThumb();
-//        minimumSeatsSeekbar.setUpdate(false);
-//
-//    }
 }

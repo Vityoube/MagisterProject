@@ -13,7 +13,7 @@
         android:layout_height="0dp"
         tools:layout_editor_absoluteX="8dp"
         tools:layout_editor_absoluteY="8dp"
-        android:layout_weight="0.25">
+        android:layout_weight="0.3">
 
         <TableRow
             android:layout_width="match_parent"
@@ -93,12 +93,12 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:layout_weight="0.01"/>
 
-    <vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals
+    <vkalashnykov.org.busapplication.layouts.MySeekbar
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/seatsNumber"
         android:layout_weight="0.1">
-    </vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals>
+    </vkalashnykov.org.busapplication.layouts.MySeekbar>
 
     <TextView
         android:id="@+id/trunkCapacityLabel"
@@ -109,13 +109,13 @@
         android:layout_weight="0.01"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-    <vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals
+    <vkalashnykov.org.busapplication.layouts.MySeekbar
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/trunkCapacity"
         android:layout_weight="0.1">
 
-    </vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals>
+    </vkalashnykov.org.busapplication.layouts.MySeekbar>
     <TextView
         android:id="@+id/salonTrunkCapacityLabel"
         android:layout_width="match_parent"
@@ -125,12 +125,12 @@
         android:gravity="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-    <vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals
+    <vkalashnykov.org.busapplication.layouts.MySeekbar
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/salonCapacity"
         android:layout_weight="0.1">
-    </vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals>
+    </vkalashnykov.org.busapplication.layouts.MySeekbar>
 
     <TextView
         android:id="@+id/minimumSeatsNumberLabel"
@@ -141,12 +141,12 @@
         android:gravity="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-    <vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals
+    <vkalashnykov.org.busapplication.layouts.MySeekbar
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/minimumSeatsNumber"
         android:layout_weight="0.1">
-    </vkalashnykov.org.busapplication.layouts.SeekbarWithIntervals>
+    </vkalashnykov.org.busapplication.layouts.MySeekbar>
 
     <LinearLayout
         android:layout_width="match_parent"

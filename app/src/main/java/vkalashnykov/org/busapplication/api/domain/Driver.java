@@ -15,6 +15,9 @@ public class Driver {
     private ArrayList<Position> route;
     private Position currentPosition;
     private ArrayList<Route> routes;
+    private int trunkCapacity;
+    private int salonCapacity;
+    private int minSeats;
 
     public Driver() {
     }
@@ -99,4 +102,27 @@ public class Driver {
         routes.add(route);
     }
 
+    public int getTrunkCapacity() {
+        return trunkCapacity;
+    }
+
+    public void setTrunkCapacity(int trunkCapacity) {
+        this.trunkCapacity = trunkCapacity;
+    }
+
+    public int getSalonCapacity() {
+        return salonCapacity;
+    }
+
+    public void setSalonCapacity(int salonCapacity) {
+        this.salonCapacity = salonCapacity;
+    }
+
+    public int getMinSeats() {
+        return minSeats;
+    }
+
+    public void setMinSeats(int minSeats) {
+        this.minSeats = minSeats;
+    }
 }

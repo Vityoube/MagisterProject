@@ -197,7 +197,9 @@ public class DriverMainActivity extends FragmentActivity
             LatLng centerPoland = new LatLng(52.0693234, 19.4781172);
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(centerPoland, 7));
         }
-        drawRoute();
+        if (driverRef.child("routes").child(String.valueOf(0))!=null
+                && driverRef.child("routes")!=null)
+            drawRoute();
 
     }
 
@@ -229,6 +231,8 @@ public class DriverMainActivity extends FragmentActivity
                             Position point = new Position(latitude, longitude);
                             points.add(point);
                         }
+                        if (points.isEmpty())
+                            return;
                         LatLng origin = new LatLng(
                                 points.get(0).getLatitude(),
                                 points.get(0).getLongitude()

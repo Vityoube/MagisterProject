@@ -123,10 +123,7 @@ public class SeekbarWithIntervals extends LinearLayout {
 
     public void setIntervals(List<String> intervals) {
         displayIntervals(intervals);
-        if (intervals.size()>1)
-            getSeekbar().setMax(intervals.size() - 1);
-        else
-            getSeekbar().setMax(intervals.size() );
+        getSeekbar().setMax(intervals.size() );
     }
 
     private void displayIntervals(List<String> intervals) {

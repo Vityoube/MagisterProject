@@ -20,7 +20,7 @@
     <string name="firstName">Imie </string>
     <string name="lastName">Nazwisko</string>
     <string name="age">Wiek </string>
-    <string name="busSize">Pojemność autobusu </string>
+    <string name="busSeatsSize">Ilość miejsc siedzących</string>
     <string name="userDetails">Detale</string>
     <string name="databaseError">Błąd połączenia z bazą danych</string>
     <string name="networkError">Błąd połączenia z siecią</string>
@@ -53,5 +53,6 @@
     <string name="minimumSeatsNumber">Najmniejsza potrzebna ilość pasażerów dla podróży</string>
     <string name="minimumSeatsNumberShortened">Najmniejsza liczba pasażerów</string>
     <string name="modify">Edytuj</string>
+    <string name="allSeats">Miejsc razem</string>
 
 </resources>

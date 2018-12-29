@@ -23,7 +23,7 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
 
     private String email;
     private String firstNameText, lastNameText, ageText, busSizeText, trunkCapacityText,
-    salonCapacityText,minSeatsText;
+    salonCapacityText,minSeatsText, generalSeatsText;
     private String driverKey;
     private MySeekbar seatsNumberSeekbar;
     private MySeekbar trunkCapacitySeekbar;
@@ -52,6 +52,7 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
         final TextView trunkCapacity = (TextView) findViewById(R.id.trunkCapacity);
         final TextView salonCapacity = (TextView) findViewById(R.id.salonCapacity);
         final TextView minSeats = (TextView) findViewById(R.id.minimumSeatsNumber);
+        final TextView allSeats=(TextView)findViewById(R.id.generalBusSize);
 
         driverRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -64,6 +65,8 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
                 trunkCapacityText=String.valueOf(driver.getTrunkCapacity());
                 salonCapacityText=String.valueOf(driver.getSalonCapacity());
                 minSeatsText=String.valueOf(driver.getMinSeats());
+                generalSeatsText=String.valueOf(driver.getFullNumberSeats());
+
 
                 firstName.setText(firstNameText);
                 lastName.setText(lastNameText);
@@ -72,6 +75,7 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
                 trunkCapacity.setText(trunkCapacityText);
                 salonCapacity.setText(salonCapacityText);
                 minSeats.setText(minSeatsText);
+                allSeats.setText(generalSeatsText);
             }
 
             @Override
@@ -112,8 +116,11 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
         if (!"".equals(ageInput.getText().toString()))
             driverRef.child("age").setValue(Integer.parseInt(ageInput.getText().toString()));
 
-        if (seatsNumberSeekbar.getProgress()>0)
+        if (seatsNumberSeekbar.getProgress()>0){
             driverRef.child("busSize").setValue(seatsNumberSeekbar.getProgress());
+            driverRef.child("fullNumberSeats").setValue(
+                    Math.round(seatsNumberSeekbar.getProgress()*1.8));
+        }
         if (trunkCapacitySeekbar.getProgress()>0)
         driverRef.child("trunkCapacity").setValue(trunkCapacitySeekbar.getProgress());
         if (salonTrunkSeekbar.getProgress()>0)

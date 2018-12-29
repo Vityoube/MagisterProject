@@ -19,6 +19,8 @@
             tools:layout_editor_absoluteY="8dp"
             android:layout_weight="30">
 
+
+
             <TableRow
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" android:weightSum="1" >
@@ -115,7 +117,7 @@
                     android:id="@+id/busSizeLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/busSize"
+                    android:text="@string/busSeatsSize"
                     android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                     android:layout_weight="0.4"/>
 
@@ -126,6 +128,27 @@
                     android:textAppearance="@style/TextAppearance.AppCompat.Body2"
                     android:gravity="center"
                     android:layout_weight="0.6"/>
+            </TableRow>
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:weightSum="1">
+
+                <TextView
+                    android:id="@+id/generalBusSizeLabel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.4"
+                    android:text="@string/allSeats"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+                <TextView
+                    android:id="@+id/generalBusSize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.6"
+                    android:gravity="center"
+                    android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
             </TableRow>
             <TableRow
                 android:layout_width="match_parent"

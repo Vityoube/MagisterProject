@@ -18,6 +18,7 @@ public class Driver {
     private int trunkCapacity;
     private int salonCapacity;
     private int minSeats;
+    private int fullNumberSeats;
 
     public Driver() {
     }
@@ -124,5 +125,13 @@ public class Driver {
 
     public void setMinSeats(int minSeats) {
         this.minSeats = minSeats;
+    }
+
+    public int getFullNumberSeats() {
+        return fullNumberSeats;
+    }
+
+    public void setFullNumberSeats(int fullNumberSeats) {
+        this.fullNumberSeats = fullNumberSeats;
     }
 }

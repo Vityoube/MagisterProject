@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:weightSum="1"
+        tools:layout_editor_absoluteX="95dp"
+        tools:layout_editor_absoluteY="0dp">
+
+        <TextView
+            android:id="@+id/seatsNumberLabel"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125"
+            android:gravity="center"
+            android:text="@string/seatsNumber"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+
+        <vkalashnykov.org.busapplication.layouts.MySeekbar
+            android:id="@+id/seatsNumber"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.layouts.MySeekbar>
+
+        <TextView
+            android:id="@+id/trunkCapacityLabel"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125"
+            android:gravity="center"
+            android:text="@string/trunkCapacity"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+
+        <vkalashnykov.org.busapplication.layouts.MySeekbar
+            android:id="@+id/trunkCapacity"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125">
+
+        </vkalashnykov.org.busapplication.layouts.MySeekbar>
+
+        <TextView
+            android:id="@+id/salonTrunkCapacityLabel"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125"
+            android:gravity="center"
+            android:text="@string/salonCapacity"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+
+        <vkalashnykov.org.busapplication.layouts.MySeekbar
+            android:id="@+id/salonCapacity"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.layouts.MySeekbar>
+
+        <TextView
+            android:id="@+id/minimumSeatsNumberLabel"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125"
+            android:gravity="center"
+            android:text="@string/minimumSeatsNumber"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
+
+        <vkalashnykov.org.busapplication.layouts.MySeekbar
+            android:id="@+id/minimumSeatsNumber"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.layouts.MySeekbar>
+
+        <Button
+            android:id="@+id/signupButton"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.1"
+            android:backgroundTint="@color/colorPrimary"
+            android:onClick="signupDriver"
+            android:text="@string/create_account" />
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

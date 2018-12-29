@@ -29,8 +29,24 @@ public class Driver {
         this.lastName = lastName;
         this.age = age;
         this.busSize = busSize;
-        route=new ArrayList<>();
-        routes=new ArrayList<>();
+        route = new ArrayList<>();
+        routes = new ArrayList<>();
+    }
+
+    public Driver(String username, String firstName, String lastName,
+                  int age, int busSize, int trunkCapacity, int salonCapacity,
+                  int minSeats, int fullNumberSeats) {
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.age = age;
+        this.busSize = busSize;
+        this.trunkCapacity = trunkCapacity;
+        this.salonCapacity = salonCapacity;
+        this.minSeats = minSeats;
+        this.fullNumberSeats = fullNumberSeats;
+        route = new ArrayList<>();
+        routes = new ArrayList<>();
     }
 
     public String getUsername() {
@@ -93,13 +109,13 @@ public class Driver {
         return routes;
     }
 
-    public void setRoutes(ArrayList<Route>  routes) {
+    public void setRoutes(ArrayList<Route> routes) {
         this.routes = routes;
     }
 
-    public void addRoute(Route route){
-        if (routes==null)
-            routes=new ArrayList<>();
+    public void addRoute(Route route) {
+        if (routes == null)
+            routes = new ArrayList<>();
         routes.add(route);
     }
 

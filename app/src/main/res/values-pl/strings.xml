@@ -54,5 +54,6 @@
     <string name="minimumSeatsNumberShortened">Najmniejsza liczba pasażerów</string>
     <string name="modify">Edytuj</string>
     <string name="allSeats">Miejsc razem</string>
+    <string name="goToBusDetails">Uzupełnij dane autobusu</string>
 
 </resources>

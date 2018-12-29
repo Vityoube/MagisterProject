@@ -54,5 +54,6 @@
     <string name="minimumSeatsNumberShortened">Min seats number</string>
     <string name="modify">Modify</string>
     <string name="allSeats">General seats</string>
+    <string name="goToBusDetails">Next: go to Bus Details</string>
 
 </resources>

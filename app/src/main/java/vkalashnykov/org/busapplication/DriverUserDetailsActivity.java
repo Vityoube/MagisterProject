@@ -61,11 +61,11 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
                 firstNameText = driver.getFirstName();
                 lastNameText = driver.getLastName();
                 ageText = String.valueOf(driver.getAge());
-                busSizeText = String.valueOf(driver.getBusSize());
-                trunkCapacityText=String.valueOf(driver.getTrunkCapacity());
-                salonCapacityText=String.valueOf(driver.getSalonCapacity());
-                minSeatsText=String.valueOf(driver.getMinSeats());
-                generalSeatsText=String.valueOf(driver.getFullNumberSeats());
+                busSizeText = String.valueOf(driver.getBusInformation().getBusSize());
+                trunkCapacityText=String.valueOf(driver.getBusInformation().getTrunkCapacity());
+                salonCapacityText=String.valueOf(driver.getBusInformation().getSalonCapacity());
+                minSeatsText=String.valueOf(driver.getBusInformation().getMinSeats());
+                generalSeatsText=String.valueOf(driver.getBusInformation().getFullNumberSeats());
 
 
                 firstName.setText(firstNameText);
@@ -117,17 +117,20 @@ public class DriverUserDetailsActivity extends AppCompatActivity {
             driverRef.child("age").setValue(Integer.parseInt(ageInput.getText().toString()));
 
         if (seatsNumberSeekbar.getProgress()>0){
-            driverRef.child("busSize").setValue(seatsNumberSeekbar.getProgress());
-            driverRef.child("fullNumberSeats").setValue(
+            driverRef.child("busInformation").child("busSize").setValue(seatsNumberSeekbar.getProgress());
+            driverRef.child("busInformation").child("fullNumberSeats").setValue(
                     Math.round(seatsNumberSeekbar.getProgress()*1.8));
         }
         if (trunkCapacitySeekbar.getProgress()>0)
-        driverRef.child("trunkCapacity").setValue(trunkCapacitySeekbar.getProgress());
+        driverRef.child("busInformation").child("trunkCapacity")
+                .setValue(trunkCapacitySeekbar.getProgress());
         if (salonTrunkSeekbar.getProgress()>0)
-        driverRef.child("salonCapacity").setValue(salonTrunkSeekbar.getProgress());
+        driverRef.child("busInformation").child("salonCapacity")
+                .setValue(salonTrunkSeekbar.getProgress());
         if (minimumSeatsSeekbar.getProgress()>0
                 && minimumSeatsSeekbar.getProgress()<=seatsNumberSeekbar.getProgress())
-            driverRef.child("minSeats").setValue(minimumSeatsSeekbar.getProgress());
+            driverRef.child("busInformation").child("minSeats")
+                    .setValue(minimumSeatsSeekbar.getProgress());
         setContentView(R.layout.activity_driver_user_details);
         recreate();
     }

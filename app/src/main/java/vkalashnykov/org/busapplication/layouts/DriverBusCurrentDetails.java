@@ -34,26 +34,32 @@ public class DriverBusCurrentDetails extends LinearLayout {
     }
 
     public void setSeatsOccupied(int seatsOccupied){
+        seatsOccupiedTextView=findViewById(R.id.seatsOccupied);
         seatsOccupiedTextView.setText(String.valueOf(seatsOccupied));
     }
 
     public void setSeats(int seats){
+        seatsTextView=findViewById(R.id.seats);
         seatsTextView.setText(String.valueOf(seats));
     }
 
     public void setTrunkOccupied(int trunkOccupied){
+        trunkOccupiedTextView=findViewById(R.id.trunkOccupied);
         trunkOccupiedTextView.setText(String.valueOf(trunkOccupied));
     }
 
     public void setTrunk(int trunk){
+        trunkTextView=findViewById(R.id.trunk);
         trunkTextView.setText(String.valueOf(trunk));
     }
 
     public void setSalonTrunk(int salonTrunk){
+        salonTrunkTextView=findViewById(R.id.salonTrunk);
         salonTrunkTextView.setText(String.valueOf(salonTrunk));
     }
 
     public void setSalonTrunkOccupied(int salonTrunkOccupied){
+        salonTrunkOccupiedTextView=findViewById(R.id.salonTrunkOccupied);
         salonTrunkOccupiedTextView.setText(String.valueOf(salonTrunkOccupied));
     }
 

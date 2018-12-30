@@ -45,7 +45,9 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Position;
+import vkalashnykov.org.busapplication.layouts.DriverBusCurrentDetails;
 
 @SuppressWarnings("deprecation")
 public class DriverMainActivity extends FragmentActivity
@@ -65,6 +67,7 @@ public class DriverMainActivity extends FragmentActivity
     private String driverKey;
     private boolean promptExit = true;
     private DatabaseReference driverRef;
+    private DriverBusCurrentDetails busDetails;
 
 
     @Override
@@ -107,7 +110,28 @@ public class DriverMainActivity extends FragmentActivity
         driverKey = intent.getStringExtra("USER_KEY");
         mAuth = FirebaseAuth.getInstance();
         driverRef = FirebaseDatabase.getInstance().getReference().child("drivers").child(driverKey);
+        busDetails=(DriverBusCurrentDetails)findViewById(R.id.driverBusCurrentDetails);
+        updateBusInformation();
+    }
 
+    private void updateBusInformation() {
+        driverRef.child("busInformation").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                BusInformation busInformation=dataSnapshot.getValue(BusInformation.class);
+                busDetails.setSeats(busInformation.getBusSize());
+                busDetails.setSeatsOccupied(busInformation.getOccupiedSeats());
+                busDetails.setTrunkOccupied(busInformation.getOccupiedTrunk());
+                busDetails.setTrunk(busInformation.getTrunkCapacity());
+                busDetails.setSalonTrunkOccupied(busInformation.getOccupiedSalonTrunk());
+                busDetails.setSalonTrunk(busInformation.getSalonCapacity());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
 

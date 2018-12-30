@@ -11,44 +11,23 @@ public class Driver {
     private String firstName;
     private String lastName;
     private int age;
-    private int busSize;
     private ArrayList<Position> route;
     private Position currentPosition;
     private ArrayList<Route> routes;
-    private int trunkCapacity;
-    private int salonCapacity;
-    private int minSeats;
-    private int fullNumberSeats;
     private BusInformation busInformation;
 
     public Driver() {
     }
 
-    public Driver(String username, String firstName, String lastName, int age, int busSize) {
+    public Driver(String username, String firstName, String lastName, int age) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
-        this.busSize = busSize;
         route = new ArrayList<>();
         routes = new ArrayList<>();
     }
 
-    public Driver(String username, String firstName, String lastName,
-                  int age, int busSize, int trunkCapacity, int salonCapacity,
-                  int minSeats, int fullNumberSeats) {
-        this.username = username;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.age = age;
-        this.busSize = busSize;
-        this.trunkCapacity = trunkCapacity;
-        this.salonCapacity = salonCapacity;
-        this.minSeats = minSeats;
-        this.fullNumberSeats = fullNumberSeats;
-        route = new ArrayList<>();
-        routes = new ArrayList<>();
-    }
 
     public String getUsername() {
         return username;
@@ -82,14 +61,6 @@ public class Driver {
         this.age = age;
     }
 
-    public int getBusSize() {
-        return busSize;
-    }
-
-    public void setBusSize(int busSize) {
-        this.busSize = busSize;
-    }
-
     public ArrayList<Position> getRoute() {
         return route;
     }
@@ -120,35 +91,12 @@ public class Driver {
         routes.add(route);
     }
 
-    public int getTrunkCapacity() {
-        return trunkCapacity;
+
+    public BusInformation getBusInformation() {
+        return busInformation;
     }
 
-    public void setTrunkCapacity(int trunkCapacity) {
-        this.trunkCapacity = trunkCapacity;
-    }
-
-    public int getSalonCapacity() {
-        return salonCapacity;
-    }
-
-    public void setSalonCapacity(int salonCapacity) {
-        this.salonCapacity = salonCapacity;
-    }
-
-    public int getMinSeats() {
-        return minSeats;
-    }
-
-    public void setMinSeats(int minSeats) {
-        this.minSeats = minSeats;
-    }
-
-    public int getFullNumberSeats() {
-        return fullNumberSeats;
-    }
-
-    public void setFullNumberSeats(int fullNumberSeats) {
-        this.fullNumberSeats = fullNumberSeats;
+    public void setBusInformation(BusInformation busInformation) {
+        this.busInformation = busInformation;
     }
 }

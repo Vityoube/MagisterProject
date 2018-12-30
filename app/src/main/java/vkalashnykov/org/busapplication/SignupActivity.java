@@ -25,6 +25,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
+import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Client;
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.layouts.MySeekbar;
@@ -133,11 +134,17 @@ public class SignupActivity extends AppCompatActivity {
                                                 Driver driver = new Driver(username.getText().toString(),
                                                         firstNameText,
                                                         lastNameText,
-                                                        ageValue,
-                                                        seatsNumber,
-                                                        trunkCapacity, salonTrunk,
-                                                        minSeats,
-                                                        fullSeatsNumber);
+                                                        ageValue
+                                                );
+                                                BusInformation busInformation=
+                                                        new BusInformation(
+                                                                seatsNumber,
+                                                                trunkCapacity,
+                                                                salonTrunk,
+                                                                minSeats,
+                                                                fullSeatsNumber);
+                                                driver.setBusInformation(busInformation);
+
                                                 String key = driversRef.push().getKey();
                                                 driversRef.child(key).setValue(driver);
                                                 Log.d(BUS, "Successfully write to Database user: " + username.getText().toString());

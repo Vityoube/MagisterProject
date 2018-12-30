@@ -1,6 +1,6 @@
 package vkalashnykov.org.busapplication.api.domain;
 
-class BusInformation {
+public class BusInformation {
     private int busSize;
     private int trunkCapacity;
     private int salonCapacity;
@@ -9,6 +9,33 @@ class BusInformation {
     private int occupiedSeats;
     private int occupiedTrunk;
     private int occupiedSalonTrunk;
+
+    public BusInformation() {
+    }
+
+    public BusInformation(int busSize, int trunkCapacity, int salonCapacity, int minSeats,
+                          int fullNumberSeats) {
+        this.busSize = busSize;
+        this.trunkCapacity = trunkCapacity;
+        this.salonCapacity = salonCapacity;
+        this.minSeats = minSeats;
+        this.fullNumberSeats = fullNumberSeats;
+        occupiedSeats=0;
+        occupiedTrunk=0;
+        occupiedSalonTrunk=0;
+    }
+
+    public BusInformation(int busSize, int trunkCapacity, int salonCapacity, int minSeats,
+                          int fullNumberSeats, int occupiedSeats, int occupiedTrunk, int occupiedSalonTrunk) {
+        this.busSize = busSize;
+        this.trunkCapacity = trunkCapacity;
+        this.salonCapacity = salonCapacity;
+        this.minSeats = minSeats;
+        this.fullNumberSeats = fullNumberSeats;
+        this.occupiedSeats = occupiedSeats;
+        this.occupiedTrunk = occupiedTrunk;
+        this.occupiedSalonTrunk = occupiedSalonTrunk;
+    }
 
     public int getBusSize() {
         return busSize;

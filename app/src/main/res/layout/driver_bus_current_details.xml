@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="wrap_content" android:weightSum="1">
+    android:layout_height="match_parent" android:weightSum="1">
 
 
     <ImageView
@@ -10,7 +10,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="0.1"
-        app:srcCompat="@drawable/seats" />
+        android:src="@drawable/seats" />
 
     <TextView
         android:id="@+id/seatsOccupied"
@@ -39,7 +39,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="0.1"
-        app:srcCompat="@drawable/trunk" />
+        android:src="@drawable/trunk" />
     <TextView
         android:id="@+id/trunkOccupied"
         android:layout_width="0dp"
@@ -67,7 +67,7 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="0.1"
-        app:srcCompat="@drawable/salonTrunk" />
+        android:src="@drawable/trunksalon" />
     <TextView
         android:id="@+id/salonTrunkOccupied"
         android:layout_width="0dp"

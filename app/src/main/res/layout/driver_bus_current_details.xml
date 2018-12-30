@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content" android:weightSum="1">
+
+
+    <ImageView
+        android:id="@+id/seatsImageView"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        app:srcCompat="@drawable/seats" />
+
+    <TextView
+        android:id="@+id/seatsOccupied"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:gravity="center"
+        android:text="" />
+    <TextView
+        android:id="@+id/seatsDelimiter"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.03"
+        android:text="/"
+        android:gravity="center"/>
+    <TextView
+        android:id="@+id/seats"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:gravity="center"
+        android:text="" />
+
+    <ImageView
+        android:id="@+id/trunkImageView"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        app:srcCompat="@drawable/trunk" />
+    <TextView
+        android:id="@+id/trunkOccupied"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:gravity="center"
+        android:text="" />
+    <TextView
+        android:id="@+id/trunkDelimiter"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.03"
+        android:text="/"
+        android:gravity="center"/>
+    <TextView
+        android:id="@+id/trunk"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:gravity="center"
+        android:text="" />
+
+    <ImageView
+        android:id="@+id/salonTrunkImageView"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        app:srcCompat="@drawable/salonTrunk" />
+    <TextView
+        android:id="@+id/salonTrunkOccupied"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:gravity="center"
+        android:text="" />
+    <TextView
+        android:id="@+id/salonTrunkDelimiter"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.03"
+        android:text="/"
+        android:gravity="center"/>
+    <TextView
+        android:id="@+id/salonTrunk"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="0.1"
+        android:gravity="center"
+        android:text="" />
+
+</LinearLayout>

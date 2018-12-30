@@ -19,6 +19,7 @@ public class Driver {
     private int salonCapacity;
     private int minSeats;
     private int fullNumberSeats;
+    private BusInformation busInformation;
 
     public Driver() {
     }

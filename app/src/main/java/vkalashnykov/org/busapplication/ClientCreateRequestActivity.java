@@ -95,7 +95,7 @@ public class ClientCreateRequestActivity extends FragmentActivity implements Goo
         driverKey=getIntent().getStringExtra("DRIVER_KEY");
         clientKey=getIntent().getStringExtra("CLIENT_KEY");
         driverName.setText(intentDriverName);
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapCientMain);
+        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapClientMain);
         mapFragment.getMapAsync(this);
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)

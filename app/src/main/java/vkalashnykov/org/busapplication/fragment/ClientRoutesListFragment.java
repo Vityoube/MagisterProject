@@ -1,10 +1,8 @@
 package vkalashnykov.org.busapplication.fragment;
 
-import android.app.LauncherActivity;
 import android.app.ListFragment;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -14,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.firebase.ui.database.FirebaseListOptions;
@@ -42,7 +39,7 @@ public class ClientRoutesListFragment extends ListFragment {
                 .getReference().child("routes")
                 .orderByKey();
         FirebaseListOptions listOptions=new FirebaseListOptions.Builder<Route>()
-                .setLayout(R.layout.route_item)
+                .setLayout(R.layout.driver_item)
                 .setQuery(routesQuery,Route.class)
                 .build();
         routeAdapter=new FirebaseListAdapter<Route>(listOptions) {

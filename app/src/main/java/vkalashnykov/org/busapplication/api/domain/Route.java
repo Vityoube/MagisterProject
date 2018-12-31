@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Objects;
 
 public class Route implements Serializable{
     private ArrayList<Position> points;
@@ -36,5 +37,14 @@ public class Route implements Serializable{
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Route route = (Route) o;
+        return this.points.equals(route.getPoints()) &&
+                this.time.equals(route.getTime());
     }
 }

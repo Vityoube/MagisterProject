@@ -30,7 +30,6 @@ import com.akexorcist.googledirection.model.Leg;
 import com.akexorcist.googledirection.model.Step;
 import com.akexorcist.googledirection.request.DirectionDestinationRequest;
 import com.akexorcist.googledirection.util.DirectionConverter;
-import com.firebase.ui.common.ChangeEventType;
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.firebase.ui.database.FirebaseListOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -57,7 +56,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
-import vkalashnykov.org.busapplication.api.domain.Client;
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Position;
 import vkalashnykov.org.busapplication.api.domain.Route;
@@ -85,9 +83,9 @@ public class ClientMainActivity extends FragmentActivity
     Route selectedRoute;
     private LinearLayout routesList;
     private int routesListSize;
-    private Marker currentDriverPosition;
+    private Marker currentDriverPositionMarker;
     private String currentDriverKey;
-    private ArrayList<Marker> currentRoute;
+    private Route currentRoute;
     private ArrayList<com.google.android.gms.maps.model.Polyline> currentRouteLines;
     private DatabaseReference selectedRouteRef;
     private Position driverPosition;
@@ -102,6 +100,7 @@ public class ClientMainActivity extends FragmentActivity
     private LocationManager locationManager;
     private FirebaseListAdapter<Driver> driversAdapter;
     private DatabaseReference driverRef;
+    private Marker driverPositionMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,8 +112,7 @@ public class ClientMainActivity extends FragmentActivity
         userKey = getIntent().getStringExtra("USER_KEY");
         welcome.setText(welcomeMessage);
         routes = new ArrayList<>();
-        currentDriverPosition = null;
-        currentRoute = new ArrayList<>();
+        currentDriverPositionMarker = null;
         currentRouteLines = new ArrayList<>();
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
@@ -145,8 +143,18 @@ public class ClientMainActivity extends FragmentActivity
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 Driver driver=dataSnapshot.getValue(Driver.class);
                                 if (driver.getRoutes()!=null && !driver.getRoutes().isEmpty()){
-                                    Route currentRoute=driver.getRoutes().get(driver.getRoutes().size()-1);
-                                    drawRouteOnMap(currentRoute.getPoints());
+                                    if (currentRoute==null ||
+                                            currentRoute!=null && !currentRoute.equals(
+                                            driver.getRoutes().get(driver.getRoutes().size()-1))){
+                                        currentRoute=driver.getRoutes().get(driver.getRoutes().size()-1);
+                                        drawRouteOnMap(currentRoute.getPoints());
+                                    }
+                                }
+                                if (driver.getCurrentPosition()!=null){
+                                    if (driverPosition==null || driverPosition!=null
+                                            && !driverPosition.equals(driver.getCurrentPosition())){
+                                        updateDriverMarker(driver.getCurrentPosition());
+                                    }
                                 }
 
                             }
@@ -164,6 +172,16 @@ public class ClientMainActivity extends FragmentActivity
                 }
             }
         });
+    }
+
+    private void updateDriverMarker(Position currentPosition) {
+        if (driverPositionMarker!=null)
+            driverPositionMarker.remove();
+        driverPosition=currentPosition;
+        MarkerOptions markerOptions=new MarkerOptions();
+        markerOptions.position(new LatLng(currentPosition.getLatitude(),driverPosition.getLongitude()));
+        markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_bus));
+        driverPositionMarker=mMap.addMarker(markerOptions);
     }
 
     private void listViewSetOnItemClickListener(ListView driverListView,

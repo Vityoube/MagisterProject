@@ -177,6 +177,8 @@ public class DriverMainActivity extends FragmentActivity
     @Override
     public void onLocationChanged(Location location) {
         LatLng currentPosition = new LatLng(location.getLatitude(), location.getLongitude());
+        driverRef.child("currentPosition").setValue(new Position(currentPosition.latitude,
+                currentPosition.longitude));
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 15));
     }
 
@@ -212,10 +214,12 @@ public class DriverMainActivity extends FragmentActivity
         map.setLatLngBoundsForCameraTarget(bounds);
         map.setMyLocationEnabled(true);
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER))
-            locationManager.requestSingleUpdate(LocationManager.GPS_PROVIDER, this,
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1,1,
+                    this,
                     Looper.myLooper());
         else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-            locationManager.requestSingleUpdate(LocationManager.NETWORK_PROVIDER, this,
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1,1,
+                    this,
                     Looper.myLooper());
         else {
             LatLng centerPoland = new LatLng(52.0693234, 19.4781172);

@@ -1,10 +1,7 @@
 package vkalashnykov.org.busapplication.api.domain;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 public class Driver {
     private String username;
@@ -15,6 +12,8 @@ public class Driver {
     private Position currentPosition;
     private ArrayList<Route> routes;
     private BusInformation busInformation;
+    private List<Distance> avgDistances;
+    private List<String> requestsIds;
 
     public Driver() {
     }
@@ -26,6 +25,8 @@ public class Driver {
         this.age = age;
         route = new ArrayList<>();
         routes = new ArrayList<>();
+        avgDistances =new ArrayList<>();
+        requestsIds=new ArrayList<>();
     }
 
 
@@ -98,5 +99,33 @@ public class Driver {
 
     public void setBusInformation(BusInformation busInformation) {
         this.busInformation = busInformation;
+    }
+
+    public List<Distance> getAvgDistances() {
+        return avgDistances;
+    }
+
+    public void setAvgDistances(List<Distance> avgDistances) {
+        this.avgDistances = avgDistances;
+    }
+
+    public Distance addAvgDistance(Distance avgDistance){
+        avgDistances.add(avgDistance);
+        return avgDistance;
+    }
+
+    public List<String> getRequestsIds() {
+        return requestsIds;
+    }
+
+    public void setRequestsIds(List<String> requestsIds) {
+        this.requestsIds = requestsIds;
+    }
+
+    public String addRequestId(String requestId){
+        if (requestsIds==null)
+            requestsIds=new ArrayList<>();
+        requestsIds.add(requestId);
+        return requestId;
     }
 }

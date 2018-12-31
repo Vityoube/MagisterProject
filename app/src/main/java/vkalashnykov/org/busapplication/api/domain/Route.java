@@ -7,20 +7,27 @@ import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 public class Route implements Serializable{
     private ArrayList<Position> points;
     private String time;
+    private String status;
+    private List<Distance> distances;
 
     public Route() {
         points=new ArrayList<>();
         time=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        distances=new ArrayList<>();
+
     }
 
-    public Route(ArrayList<Position> points) {
+    public Route(ArrayList<Position> points, String status) {
         this.points = points;
         time=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        this.status=status;
+        distances=new ArrayList<>();
     }
 
     public ArrayList<Position> getPoints() {
@@ -39,12 +46,28 @@ public class Route implements Serializable{
         this.time = time;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Route route = (Route) o;
         return this.points.equals(route.getPoints()) &&
-                this.time.equals(route.getTime());
+                this.time.equals(route.getTime()) && this.status.equals(route.getStatus());
+    }
+
+    public Position addPoint(Position point, int position){
+        if (points==null)
+            points=new ArrayList<>();
+        if (position<points.size())
+            points.add(position,point);
+        return point;
     }
 }

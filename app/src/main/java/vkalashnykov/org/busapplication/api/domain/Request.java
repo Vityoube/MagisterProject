@@ -1,59 +1,33 @@
 package vkalashnykov.org.busapplication.api.domain;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class Request {
-    private String clientKey,driverKey;
-    private ArrayList<Message> messages;
     private String createDate;
-    private STATUS status;
+    private String status;
+    private  Position from;
+    private Position to;
+    private int seatsNumber;
+    private int trunk;
+    private int salonTrunk;
 
-    public enum STATUS {
-        RAISED, REJECTED, CANCELLED, APPROVED
-    }
 
     public Request() {
-        messages=new ArrayList<>();
     }
 
-    public Request(String clientKey, String driverKey) {
-        this.clientKey = clientKey;
-        this.driverKey = driverKey;
-        messages=new ArrayList<>();
+    public Request(Position from, Position to, String status,
+                   int seatsNumber, int trunk, int salonTrunk) {
+        this.from=from;
+        this.to=to;
+        createDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+        this.status=status;
+        this.seatsNumber=seatsNumber;
+        this.trunk=trunk;
+        this.salonTrunk=salonTrunk;
     }
 
-    public Request(String clientKey,String driverKey, ArrayList<Message> messages,
-                   String createDate, STATUS status) {
-        this.clientKey = clientKey;
-        this.driverKey = driverKey;
-        this.messages = messages;
-        this.createDate = createDate;
-        this.status = status;
-    }
-
-    public String getClientKey() {
-        return clientKey;
-    }
-
-    public void setClientKey(String clientKey) {
-        this.clientKey = clientKey;
-    }
-
-    public String getDriverKey() {
-        return driverKey;
-    }
-
-    public void setDriverKey(String driverKey) {
-        this.driverKey = driverKey;
-    }
-
-    public ArrayList<Message> getMessages() {
-        return messages;
-    }
-
-    public void setMessages(ArrayList<Message> messages) {
-        this.messages = messages;
-    }
 
     public String getCreateDate() {
         return createDate;
@@ -63,11 +37,51 @@ public class Request {
         this.createDate = createDate;
     }
 
-    public STATUS getStatus() {
+    public String getStatus() {
         return status;
     }
 
-    public void setStatus(STATUS status) {
+    public void setStatus(String  status) {
         this.status = status;
+    }
+
+    public Position getFrom() {
+        return from;
+    }
+
+    public void setFrom(Position from) {
+        this.from = from;
+    }
+
+    public Position getTo() {
+        return to;
+    }
+
+    public void setTo(Position to) {
+        this.to = to;
+    }
+
+    public int getSeatsNumber() {
+        return seatsNumber;
+    }
+
+    public void setSeatsNumber(int seatsNumber) {
+        this.seatsNumber = seatsNumber;
+    }
+
+    public int getTrunk() {
+        return trunk;
+    }
+
+    public void setTrunk(int trunk) {
+        this.trunk = trunk;
+    }
+
+    public int getSalonTrunk() {
+        return salonTrunk;
+    }
+
+    public void setSalonTrunk(int salonTrunk) {
+        this.salonTrunk = salonTrunk;
     }
 }

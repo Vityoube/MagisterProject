@@ -244,8 +244,10 @@ public class DriverNewRouteActivity extends AppCompatActivity
                         );
                         points.add(point);
                     }
+                    String routeStatus=getString(R.string.opened);
                     vkalashnykov.org.busapplication.api.domain.Route route=
-                            new vkalashnykov.org.busapplication.api.domain.Route(points);
+                            new vkalashnykov.org.busapplication.api.domain.Route(points,
+                                    routeStatus);
                     driver.addRoute(route);
                     driverRef.setValue(driver);
                     setResult(RESULT_OK);

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="raised">Raised</string>
+    <string name="driver_canceled">Canceled by Driver</string>
+    <string name="client_canceled">Canceled by Client</string>
+    <string name="approved">Approved</string>
+</resources>

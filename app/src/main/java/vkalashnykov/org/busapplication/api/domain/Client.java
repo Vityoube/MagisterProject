@@ -1,9 +1,13 @@
 package vkalashnykov.org.busapplication.api.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Client {
     private String username;
     private String firstName;
     private String lastName;
+    private List<String> requestIds;
 
     public Client() {
     }
@@ -12,6 +16,7 @@ public class Client {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
+        requestIds=new ArrayList<>();
     }
 
     public String getUsername() {
@@ -36,5 +41,20 @@ public class Client {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public List<String> getRequestIds() {
+        return requestIds;
+    }
+
+    public void setRequestIds(List<String> requestIds) {
+        this.requestIds = requestIds;
+    }
+
+    public String addRequestId(String requestId){
+        if (requestIds==null)
+            requestIds=new ArrayList<>();
+        requestIds.add(requestId);
+        return requestId;
     }
 }

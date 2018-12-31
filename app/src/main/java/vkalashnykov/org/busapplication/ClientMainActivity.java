@@ -43,6 +43,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -51,6 +52,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
+import com.google.maps.android.PolyUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,6 +103,10 @@ public class ClientMainActivity extends FragmentActivity
     private FirebaseListAdapter<Driver> driversAdapter;
     private DatabaseReference driverRef;
     private Marker driverPositionMarker;
+    private boolean selectionOrigin=true;
+    private boolean selectionDestination=true;
+    private Marker startRequestMarker;
+    private Marker finishRequestMarker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -220,6 +226,9 @@ public class ClientMainActivity extends FragmentActivity
 
     private void drawRouteOnMap(ArrayList<Position> points) {
         mMap.clear();
+        for (Polyline polyline :currentRouteLines)
+            polyline.remove();
+        currentRouteLines.clear();
         if (points.isEmpty())
             return;
         final LatLng origin = new LatLng(
@@ -285,7 +294,7 @@ public class ClientMainActivity extends FragmentActivity
                                                 5, Color.GREEN,
                                                 5, Color.GREEN);
                                 for (PolylineOptions polylineOptions : polylinesOptions)
-                                    mMap.addPolyline(polylineOptions);
+                                    currentRouteLines.add(mMap.addPolyline(polylineOptions));
                                 mMap.moveCamera(CameraUpdateFactory
                                         .newLatLngBounds(cameraBounds.build(),100));
                             }
@@ -448,6 +457,48 @@ public class ClientMainActivity extends FragmentActivity
             LatLng centerPoland = new LatLng(52.0693234, 19.4781172);
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(centerPoland, 7));
         }
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                if (selectionOrigin){
+                    setOriginMarker(latLng);
+                    selectionOrigin=false;
+                } else if (selectionDestination){
+                    setDestinationMarker(latLng);
+                    selectionDestination=false;
+                }
+            }
+        });
+    }
+
+    private void setDestinationMarker(LatLng latLng){
+        if (finishRequestMarker!=null)
+            finishRequestMarker.remove();
+        for (Polyline polyline : currentRouteLines){
+            if (PolyUtil.isLocationOnPath(latLng,polyline.getPoints(),true,100) ){
+                MarkerOptions destinationOptions=new MarkerOptions();
+                destinationOptions.icon(BitmapDescriptorFactory.defaultMarker());
+                destinationOptions.position(latLng);
+                destinationOptions.title(getString(R.string.finish));
+                finishRequestMarker=mMap.addMarker(destinationOptions);
+            }
+        }
+
+    }
+
+    private void setOriginMarker(LatLng latLng) {
+        if (startRequestMarker!=null)
+            startRequestMarker.remove();
+        for (Polyline polyline : currentRouteLines){
+            if (PolyUtil.isLocationOnPath(latLng,polyline.getPoints(),true,100) ){
+                MarkerOptions originOptions=new MarkerOptions();
+                originOptions.icon(BitmapDescriptorFactory.defaultMarker());
+                originOptions.position(latLng);
+                originOptions.title(getString(R.string.start));
+                startRequestMarker=mMap.addMarker(originOptions);
+            }
+        }
+
     }
 
 

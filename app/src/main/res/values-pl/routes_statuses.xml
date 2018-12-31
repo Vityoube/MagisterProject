@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="opened">Otwarta</string>
+    <string name="inprogress">W trakcie jazdy</string>
+    <string name="finished">Zakończona</string>
+</resources>

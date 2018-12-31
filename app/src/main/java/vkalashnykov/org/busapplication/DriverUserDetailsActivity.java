@@ -4,7 +4,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,7 +16,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 
 import vkalashnykov.org.busapplication.api.domain.Driver;
-import vkalashnykov.org.busapplication.layouts.MySeekbar;
+import vkalashnykov.org.busapplication.components.MySeekbar;
 
 public class DriverUserDetailsActivity extends AppCompatActivity {
 

@@ -1,14 +1,11 @@
-package vkalashnykov.org.busapplication.layouts;
+package vkalashnykov.org.busapplication.components;
 
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;

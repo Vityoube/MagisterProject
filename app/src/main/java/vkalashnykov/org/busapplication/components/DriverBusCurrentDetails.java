@@ -1,4 +1,4 @@
-package vkalashnykov.org.busapplication.layouts;
+package vkalashnykov.org.busapplication.components;
 
 import android.app.Activity;
 import android.content.Context;

@@ -21,11 +21,11 @@
             android:text="@string/seatsNumber"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-        <vkalashnykov.org.busapplication.layouts.MySeekbar
+        <vkalashnykov.org.busapplication.components.MySeekbar
             android:id="@+id/seatsNumber"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.layouts.MySeekbar>
+            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.components.MySeekbar>
 
         <TextView
             android:id="@+id/trunkCapacityLabel"
@@ -36,13 +36,13 @@
             android:text="@string/trunkCapacity"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-        <vkalashnykov.org.busapplication.layouts.MySeekbar
+        <vkalashnykov.org.busapplication.components.MySeekbar
             android:id="@+id/trunkCapacity"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="0.1125">
 
-        </vkalashnykov.org.busapplication.layouts.MySeekbar>
+        </vkalashnykov.org.busapplication.components.MySeekbar>
 
         <TextView
             android:id="@+id/salonTrunkCapacityLabel"
@@ -53,11 +53,11 @@
             android:text="@string/salonCapacity"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-        <vkalashnykov.org.busapplication.layouts.MySeekbar
+        <vkalashnykov.org.busapplication.components.MySeekbar
             android:id="@+id/salonCapacity"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.layouts.MySeekbar>
+            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.components.MySeekbar>
 
         <TextView
             android:id="@+id/minimumSeatsNumberLabel"
@@ -68,11 +68,11 @@
             android:text="@string/minimumSeatsNumber"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
-        <vkalashnykov.org.busapplication.layouts.MySeekbar
+        <vkalashnykov.org.busapplication.components.MySeekbar
             android:id="@+id/minimumSeatsNumber"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.layouts.MySeekbar>
+            android:layout_weight="0.1125"></vkalashnykov.org.busapplication.components.MySeekbar>
 
         <Button
             android:id="@+id/signupButton"

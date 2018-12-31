@@ -61,8 +61,9 @@ import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Position;
 import vkalashnykov.org.busapplication.api.domain.Route;
+import vkalashnykov.org.busapplication.components.CreateRequestPanel;
 import vkalashnykov.org.busapplication.fragment.ClientMapFragment;
-import vkalashnykov.org.busapplication.layouts.DriverBusCurrentDetails;
+import vkalashnykov.org.busapplication.components.DriverBusCurrentDetails;
 
 @SuppressWarnings("deprecation")
 public class ClientMainActivity extends FragmentActivity
@@ -107,6 +108,7 @@ public class ClientMainActivity extends FragmentActivity
     private boolean selectionDestination=true;
     private Marker startRequestMarker;
     private Marker finishRequestMarker;
+    private CreateRequestPanel createRequestPanel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,11 +129,13 @@ public class ClientMainActivity extends FragmentActivity
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
         }
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        createRequestPanel=findViewById(R.id.createRequestPanel);
 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapClientMain);
         mapFragment.getMapAsync(this);
         initializeListView();
+
     }
 
     private void initializeListView() {
@@ -149,16 +153,18 @@ public class ClientMainActivity extends FragmentActivity
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 Driver driver=dataSnapshot.getValue(Driver.class);
                                 if (driver.getRoutes()!=null && !driver.getRoutes().isEmpty()){
-                                    if (currentRoute==null ||
-                                            currentRoute!=null && !currentRoute.equals(
-                                            driver.getRoutes().get(driver.getRoutes().size()-1))){
-                                        currentRoute=driver.getRoutes().get(driver.getRoutes().size()-1);
-                                        drawRouteOnMap(currentRoute.getPoints());
+                                    if (getCurrentRoute()==null ||
+                                            (getCurrentRoute()!=null &&
+                                                    !getCurrentRoute().equals(
+                                            driver.getRoutes().get(driver.getRoutes().size()-1)))){
+                                        setCurrentRoute(driver.getRoutes()
+                                                .get(driver.getRoutes().size()-1));
+                                        drawRouteOnMap(getCurrentRoute().getPoints());
                                     }
                                 }
                                 if (driver.getCurrentPosition()!=null){
-                                    if (driverPosition==null || driverPosition!=null
-                                            && !driverPosition.equals(driver.getCurrentPosition())){
+                                    if (driverPosition==null || (driverPosition!=null
+                                            && !driverPosition.equals(driver.getCurrentPosition()))){
                                         updateDriverMarker(driver.getCurrentPosition());
                                     }
                                 }
@@ -466,6 +472,7 @@ public class ClientMainActivity extends FragmentActivity
                 } else if (selectionDestination){
                     setDestinationMarker(latLng);
                     selectionDestination=false;
+                    createRequestPanel.setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -515,6 +522,10 @@ public class ClientMainActivity extends FragmentActivity
         driversAdapter.stopListening();
     }
 
+    public void cancelCreateRequest(View view) {
+        createRequestPanel.setVisibility(View.INVISIBLE);
+    }
+
 
 //        @Override
 //        public void onMapReady(GoogleMap googleMap) {
@@ -535,4 +546,12 @@ public class ClientMainActivity extends FragmentActivity
 //                }
 //            });
 //        }
+
+    public void setCurrentRoute(Route route){
+        currentRoute=route;
+    }
+
+    public Route getCurrentRoute(){
+        return currentRoute;
+    }
 }

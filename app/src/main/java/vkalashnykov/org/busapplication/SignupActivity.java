@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Client;
 import vkalashnykov.org.busapplication.api.domain.Driver;
-import vkalashnykov.org.busapplication.layouts.MySeekbar;
+import vkalashnykov.org.busapplication.components.MySeekbar;
 
 public class SignupActivity extends AppCompatActivity {
 

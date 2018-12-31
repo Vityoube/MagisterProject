@@ -51,39 +51,21 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="40"
+            android:layout_weight="36"
             android:tag="main">
         </fragment>
-        <LinearLayout
-            android:id="@+id/request"
+        <vkalashnykov.org.busapplication.components.CreateRequestPanel
+            android:id="@+id/createRequestPanel"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="gone"
-            android:weightSum="10">
-            <Button
-                android:id="@+id/selectLocation"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:enabled="true"
-                android:text="@string/choose_location"
-                android:background="@color/colorPrimary"
-                android:layout_weight="5"/>
-            <Button
-                android:id="@+id/createRequest"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:text="@string/create_request"
-                android:enabled="true"
-                android:background="@color/colorPrimary"
-                android:layout_weight="5"/>
-        </LinearLayout>
+            android:layout_height="0dp"
+            android:layout_weight="20"
+            android:visibility="invisible"></vkalashnykov.org.busapplication.components.CreateRequestPanel>
 
         <ListView
             android:id="@+id/driverList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="36"/>
+            android:layout_weight="30"/>
 
 
         <!--<fragment-->

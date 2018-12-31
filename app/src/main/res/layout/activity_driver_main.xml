@@ -57,12 +57,12 @@
                 android:layout_weight=".80">
 
             </fragment>
-            <vkalashnykov.org.busapplication.layouts.DriverBusCurrentDetails
+            <vkalashnykov.org.busapplication.components.DriverBusCurrentDetails
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:id="@+id/driverBusCurrentDetails"
                 android:layout_weight="0.1"
-                ></vkalashnykov.org.busapplication.layouts.DriverBusCurrentDetails>
+                ></vkalashnykov.org.busapplication.components.DriverBusCurrentDetails>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"

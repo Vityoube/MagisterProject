@@ -47,7 +47,7 @@ import java.util.List;
 
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Position;
-import vkalashnykov.org.busapplication.layouts.DriverBusCurrentDetails;
+import vkalashnykov.org.busapplication.components.DriverBusCurrentDetails;
 
 @SuppressWarnings("deprecation")
 public class DriverMainActivity extends FragmentActivity

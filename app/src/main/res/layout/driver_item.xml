@@ -16,11 +16,11 @@
         android:textSize="18sp"
         app:autoSizeTextType="uniform"
         tools:autoText="false" />
-    <vkalashnykov.org.busapplication.layouts.DriverBusCurrentDetails
+    <vkalashnykov.org.busapplication.components.DriverBusCurrentDetails
         android:id="@+id/busInfo"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="60">
 
-    </vkalashnykov.org.busapplication.layouts.DriverBusCurrentDetails>
+    </vkalashnykov.org.busapplication.components.DriverBusCurrentDetails>
 </LinearLayout>

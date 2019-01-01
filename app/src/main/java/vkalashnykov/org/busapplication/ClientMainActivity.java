@@ -60,7 +60,9 @@ import java.util.List;
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Position;
+import vkalashnykov.org.busapplication.api.domain.Request;
 import vkalashnykov.org.busapplication.api.domain.Route;
+import vkalashnykov.org.busapplication.components.CreateRequestDialog;
 import vkalashnykov.org.busapplication.components.CreateRequestPanel;
 import vkalashnykov.org.busapplication.fragment.ClientMapFragment;
 import vkalashnykov.org.busapplication.components.DriverBusCurrentDetails;
@@ -109,6 +111,8 @@ public class ClientMainActivity extends FragmentActivity
     private Marker startRequestMarker;
     private Marker finishRequestMarker;
     private CreateRequestPanel createRequestPanel;
+    private DatabaseReference clientRef;
+    private DatabaseReference selectedDriverRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +122,7 @@ public class ClientMainActivity extends FragmentActivity
         String welcomeMessage = welcome.getText().toString() + ", " + getIntent().getStringExtra("NAME") + "!";
         userEmail = getIntent().getStringExtra("USER_EMAIL");
         userKey = getIntent().getStringExtra("USER_KEY");
+        clientRef=FirebaseDatabase.getInstance().getReference().child("clients").child(userKey);
         welcome.setText(welcomeMessage);
         routes = new ArrayList<>();
         currentDriverPositionMarker = null;
@@ -150,7 +155,8 @@ public class ClientMainActivity extends FragmentActivity
                 for (int i = 0; i < parent.getCount(); i++) {
                     if (i == position) {
                         parent.getChildAt(i).setBackgroundColor(Color.GREEN);
-                        driversAdapter.getRef(position).addValueEventListener(new ValueEventListener() {
+                        selectedDriverRef=driversAdapter.getRef(position);
+                        selectedDriverRef.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 Driver driver=dataSnapshot.getValue(Driver.class);
@@ -300,6 +306,7 @@ public class ClientMainActivity extends FragmentActivity
                             for (Leg leg : route.getLegList()) {
 
                                 List<Step> directionPoints = leg.getStepList();
+
                                 ArrayList<PolylineOptions> polylinesOptions =
                                         DirectionConverter.createTransitPolyline(
                                                 ClientMainActivity.this,
@@ -616,4 +623,72 @@ public class ClientMainActivity extends FragmentActivity
     public Route getCurrentRoute(){
         return currentRoute;
     }
+
+    public void cancelRequestCreation(){
+        createRequestPanel.setVisibility(View.INVISIBLE);
+        startRequestMarker.remove();
+        finishRequestMarker.remove();
+        selectionOrigin=true;
+        selectionDestination=true;
+    }
+
+    public void saveRequest(int seatsNumberValue, int trunkValue, int salonTrunkValue) {
+        DatabaseReference requestRef=FirebaseDatabase.getInstance().getReference()
+                .child("requests").push();
+        Position from=new Position(startRequestMarker.getPosition().latitude,
+                startRequestMarker.getPosition().longitude);
+        Position to=new Position(finishRequestMarker.getPosition().latitude,
+                finishRequestMarker.getPosition().longitude);
+        Request request=new Request(from,to,getString(R.string.raised),
+                seatsNumberValue,trunkValue,salonTrunkValue);
+        requestRef.setValue(request);
+        addRequestToDriver(requestRef.getKey());
+        addRequestToClient(requestRef.getKey());
+    }
+
+    private void addRequestToClient(final String key) {
+        final DatabaseReference requestIdsRef=clientRef.child("requestIds");
+        requestIdsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                List<String> requestIds=(ArrayList<String>)dataSnapshot.getValue();
+                if(requestIds==null)
+                    requestIds=new ArrayList<String>();
+                requestIds.add(key);
+                requestIdsRef.setValue(requestIds);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void addRequestToDriver(final String key) {
+        final DatabaseReference requestIdsRef=selectedDriverRef.child("requestIds");
+        requestIdsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                List<String> requestIds=(ArrayList<String>)dataSnapshot.getValue();
+                if(requestIds==null)
+                    requestIds=new ArrayList<String>();
+                requestIds.add(key);
+                requestIdsRef.setValue(requestIds);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+
+    public void callCreationRequestDialog(View view) {
+        CreateRequestDialog requestDialog=new CreateRequestDialog(this);
+        requestDialog.show();
+    }
+
+
 }

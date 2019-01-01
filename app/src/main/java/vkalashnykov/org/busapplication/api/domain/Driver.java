@@ -13,7 +13,7 @@ public class Driver {
     private ArrayList<Route> routes;
     private BusInformation busInformation;
     private List<Distance> avgDistances;
-    private List<String> requestsIds;
+    private List<String> requestIds;
 
     public Driver() {
     }
@@ -26,7 +26,7 @@ public class Driver {
         route = new ArrayList<>();
         routes = new ArrayList<>();
         avgDistances =new ArrayList<>();
-        requestsIds=new ArrayList<>();
+        requestIds =new ArrayList<>();
     }
 
 
@@ -114,18 +114,18 @@ public class Driver {
         return avgDistance;
     }
 
-    public List<String> getRequestsIds() {
-        return requestsIds;
+    public List<String> getRequestIds() {
+        return requestIds;
     }
 
-    public void setRequestsIds(List<String> requestsIds) {
-        this.requestsIds = requestsIds;
+    public void setRequestIds(List<String> requestIds) {
+        this.requestIds = requestIds;
     }
 
     public String addRequestId(String requestId){
-        if (requestsIds==null)
-            requestsIds=new ArrayList<>();
-        requestsIds.add(requestId);
+        if (requestIds ==null)
+            requestIds =new ArrayList<>();
+        requestIds.add(requestId);
         return requestId;
     }
 }

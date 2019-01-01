@@ -31,6 +31,7 @@
             android:layout_height="match_parent"
             android:layout_weight="50"
             android:id="@+id/sendRequestButton"
-            android:text="@string/create_request"/>
+            android:text="@string/create_request"
+            android:onClick="callCreationRequestDialog"/>
     </LinearLayout>
 </LinearLayout>

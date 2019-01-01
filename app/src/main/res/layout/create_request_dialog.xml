@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:weightSum="100">
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp" android:layout_weight="84">
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="28">
+
+            <TextView
+                android:id="@+id/seatsNumberLabel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:text="@string/seatsNumber" />
+
+            <EditText
+                android:id="@+id/seatsNumber"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:ems="10"
+                android:inputType="number" />
+
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="28">
+
+            <TextView
+                android:id="@+id/trunkLabel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:text="@string/trunkCapacity" />
+
+            <EditText
+                android:id="@+id/trunk"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:ems="10"
+                android:inputType="number" />
+
+        </TableRow>
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="28">
+
+            <TextView
+                android:id="@+id/salonTrunkLabel"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:text="@string/salonCapacity" />
+
+            <EditText
+                android:id="@+id/salonTrunk"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="50"
+                android:ems="10"
+                android:inputType="number" />
+
+        </TableRow>
+    </TableLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="16"
+        android:orientation="horizontal" android:weightSum="1">
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:id="@+id/cancelButton"
+            android:text="@string/cancel"/>
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.5"
+            android:id="@+id/submitButton"
+            android:text="@string/submit"/>
+    </LinearLayout>
+
+</LinearLayout>

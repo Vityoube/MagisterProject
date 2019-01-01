@@ -135,6 +135,8 @@ public class ClientMainActivity extends FragmentActivity
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapClientMain);
         mapFragment.getMapAsync(this);
         initializeListView();
+        selectionOrigin=true;
+        selectionDestination=true;
 
     }
 
@@ -153,18 +155,23 @@ public class ClientMainActivity extends FragmentActivity
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 Driver driver=dataSnapshot.getValue(Driver.class);
                                 if (driver.getRoutes()!=null && !driver.getRoutes().isEmpty()){
-                                    if (getCurrentRoute()==null ||
-                                            (getCurrentRoute()!=null &&
-                                                    !getCurrentRoute().equals(
-                                            driver.getRoutes().get(driver.getRoutes().size()-1)))){
+                                    if (getCurrentRoute()==null ){
+                                        setCurrentRoute(driver.getRoutes()
+                                                .get(driver.getRoutes().size()-1));
+                                        drawRouteOnMap(getCurrentRoute().getPoints());
+                                    } else if (getCurrentRoute()!=null &&
+                                            !(getCurrentRoute().equals(
+                                                    driver.getRoutes().get(driver.getRoutes().size()-1)))){
                                         setCurrentRoute(driver.getRoutes()
                                                 .get(driver.getRoutes().size()-1));
                                         drawRouteOnMap(getCurrentRoute().getPoints());
                                     }
                                 }
                                 if (driver.getCurrentPosition()!=null){
-                                    if (driverPosition==null || (driverPosition!=null
-                                            && !driverPosition.equals(driver.getCurrentPosition()))){
+                                    if (driverPosition==null ){
+                                        updateDriverMarker(driver.getCurrentPosition());
+                                    } else if (driverPosition!=null
+                                            && !(driverPosition.equals(driver.getCurrentPosition()))){
                                         updateDriverMarker(driver.getCurrentPosition());
                                     }
                                 }
@@ -473,9 +480,60 @@ public class ClientMainActivity extends FragmentActivity
                     setDestinationMarker(latLng);
                     selectionDestination=false;
                     createRequestPanel.setVisibility(View.VISIBLE);
+                    calculateDriveTime();
                 }
             }
         });
+    }
+
+    private void calculateDriveTime() {
+        List<LatLng> waypoints=new ArrayList<>();
+//        for (Polyline polyline :currentRouteLines){
+//            if (PolyUtil.isLocationOnPath(startRequestMarker.getPosition(),
+//                    polyline.getPoints(),true,100)
+//                    && !PolyUtil.isLocationOnPath(finishRequestMarker.getPosition(),polyline.getPoints(),
+//                    true,100)
+//                ){
+//                    waypoints.add(polyline.getPoints().get(polyline.getPoints().size()-1));
+//                    int nextPolylineIndex=currentRouteLines.indexOf(polyline)+1;
+//                    for (int i=nextPolylineIndex;i<currentRouteLines.size();i++){
+//                        Polyline currentPolyline=currentRouteLines.get(i);
+//                        if(!PolyUtil.isLocationOnPath(finishRequestMarker.getPosition(),
+//                                currentPolyline.getPoints(),
+//                                true,100) ){
+//                                waypoints.add(currentPolyline.getPoints().get(currentPolyline.getPoints().size()-1));
+//                        }
+//
+//                    }
+//            }
+//        }
+        DirectionDestinationRequest directionRequest = GoogleDirection
+                .withServerKey(getString(R.string.api_key))
+                .from(startRequestMarker.getPosition());
+        if (!waypoints.isEmpty())
+            directionRequest.and(waypoints);
+        directionRequest
+                .to(finishRequestMarker.getPosition())
+                .transportMode(TransportMode.DRIVING)
+                .execute(new DirectionCallback(){
+
+                    @Override
+                    public void onDirectionSuccess(Direction direction, String rawBody) {
+                        if (direction.isOK()){
+                            long driveTime=0;
+                            for (Leg leg : direction.getRouteList().get(0).getLegList()){
+                                driveTime+=Long.parseLong(leg.getDuration().getValue());
+                            }
+                            createRequestPanel.setDriveTime(driveTime);
+                        }
+                    }
+
+                    @Override
+                    public void onDirectionFailure(Throwable t) {
+
+                    }
+                });
+
     }
 
     private void setDestinationMarker(LatLng latLng){
@@ -524,6 +582,10 @@ public class ClientMainActivity extends FragmentActivity
 
     public void cancelCreateRequest(View view) {
         createRequestPanel.setVisibility(View.INVISIBLE);
+        startRequestMarker.remove();
+        finishRequestMarker.remove();
+        selectionOrigin=true;
+        selectionDestination=true;
     }
 
 

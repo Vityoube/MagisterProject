@@ -29,6 +29,12 @@ public class CreateRequestPanel extends LinearLayout {
 
     public void setDriveTime(long driveTime){
         driveTimeText=findViewById(R.id.driveTime);
-        driveTimeText.setText("Estimated drive time: "+driveTime);
+        long hours=(long)driveTime/3600;
+        long minutes=(driveTime-(long)(hours*3600))/60;
+        long seconds=driveTime-(hours*3600)-(minutes*60);
+        driveTimeText.setText("Estimated drive time: "+
+                (hours!=0 ? hours+ "h ":"")
+                +(minutes!=0 ? minutes+"m ": "")
+        +seconds+"s");
     }
 }

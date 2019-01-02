@@ -345,4 +345,10 @@ public class DriverMainActivity extends FragmentActivity
         routesHistoryIntent.putExtra("DRIVER_KEY", driverKey);
         startActivityForResult(routesHistoryIntent, CHOOSE_ROUTE_FROM_HISTORY_REQUEST);
     }
+
+    public void goToRequestList(View view) {
+        Intent goToRequestList=new Intent(this,DriverRequestListActivity.class);
+        goToRequestList.putExtra("DRIVER_KEY",driverKey);
+        startActivity(goToRequestList);
+    }
 }

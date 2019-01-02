@@ -49,11 +49,21 @@
     <string name="route_history">From history</string>
     <string name="trunkCapacity">Trunk capacity</string>
     <string name="salonCapacity">Salon trunk capacity</string>
-    <string name="seatsNumber" >Number of seats</string>
+    <string name="seatsNumber">Number of seats</string>
     <string name="minimumSeatsNumber">Minimum number of seats to go</string>
     <string name="minimumSeatsNumberShortened">Min seats number</string>
     <string name="modify">Modify</string>
     <string name="allSeats">General seats</string>
     <string name="goToBusDetails">Next: go to Bus Details</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="passengers">Passengers number</string>
+    <string name="trunkSize">Trunk size</string>
+    <string name="salonTrunk">Salon trunk size</string>
+    <string name="creation_date">Creation date</string>
+    <string name="status">Status</string>
+    <string name="reject">Reject</string>
+    <string name="accept">Accept</string>
+    <string name="request_list">Request list</string>
 
 </resources>

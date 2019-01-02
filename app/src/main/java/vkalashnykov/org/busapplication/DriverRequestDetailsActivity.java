@@ -14,6 +14,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Request;
 
@@ -87,6 +90,7 @@ public class DriverRequestDetailsActivity extends AppCompatActivity {
                         +salonTrunkValue);
                 requestRef.child("status").setValue(getString(R.string.approved));
                 driverBusInformationRef.setValue(busInformation);
+                addRequestToRoute();
                 Intent returnToDriverMain=new Intent(DriverRequestDetailsActivity.this,
                         DriverMainActivity.class);
                 returnToDriverMain.putExtra("USER_KEY",driverRef.getKey());
@@ -100,5 +104,38 @@ public class DriverRequestDetailsActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private void addRequestToRoute() {
+        driverRef.child("currentRoute").child("acceptedRequests")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        List<Request> acceptedRequests=(ArrayList<Request>)dataSnapshot.getValue();
+                        if (acceptedRequests==null)
+                            acceptedRequests=new ArrayList<>();
+                        final List<Request> finalAcceptedRequests = acceptedRequests;
+                        requestRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Request acceptedRequest=dataSnapshot.getValue(Request.class);
+                                finalAcceptedRequests.add(acceptedRequest);
+                                driverRef.child("currentRoute").child("acceptedRequests")
+                                        .setValue(finalAcceptedRequests);
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+
     }
 }

@@ -62,6 +62,7 @@ implements LocationListener, OnMapReadyCallback{
     private FirebaseListAdapter<Route> routesAdapter;
     private int selectedRoute=-1;
     private Button submitButton;
+    private DatabaseReference driverRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +85,7 @@ implements LocationListener, OnMapReadyCallback{
         submitButton=(Button)findViewById(R.id.select_route_button);
         routesRef= FirebaseDatabase.getInstance().getReference()
                 .child("drivers").child(driverKey).child("routes");
+        driverRef=FirebaseDatabase.getInstance().getReference().child("drivers").child(driverKey);
         Query routesQuery=routesRef.orderByKey();
         FirebaseListOptions<Route> listOptions=new FirebaseListOptions.Builder<Route>()
                 .setLayout(R.layout.route)
@@ -178,6 +180,8 @@ implements LocationListener, OnMapReadyCallback{
                             Route routeToCopy=dataSnapshot.child(String.valueOf(selectedRoute))
                                     .getValue(Route.class);
                             routesRef.child(String.valueOf(lastRouteInList+1)).setValue(routeToCopy);
+                            driverRef.child("currentRoute").setValue(routeToCopy);
+
                             setResult(RESULT_OK);
                             finish();
                         }

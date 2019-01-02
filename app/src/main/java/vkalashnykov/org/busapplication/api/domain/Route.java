@@ -15,11 +15,13 @@ public class Route implements Serializable{
     private String time;
     private String status;
     private List<Distance> distances;
+    private List<Request> acceptedRequests;
 
     public Route() {
         points=new ArrayList<>();
         time=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         distances=new ArrayList<>();
+        acceptedRequests=new ArrayList<>();
 
     }
 
@@ -28,6 +30,7 @@ public class Route implements Serializable{
         time=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         this.status=status;
         distances=new ArrayList<>();
+        acceptedRequests=new ArrayList<>();
     }
 
     public ArrayList<Position> getPoints() {
@@ -69,5 +72,20 @@ public class Route implements Serializable{
         if (position<points.size())
             points.add(position,point);
         return point;
+    }
+
+    public List<Request> getAcceptedRequests() {
+        return acceptedRequests;
+    }
+
+    public void setAcceptedRequests(List<Request> acceptedRequests) {
+        this.acceptedRequests = acceptedRequests;
+    }
+
+    public Request addAcceptedRequest(Request request){
+        if (acceptedRequests==null)
+            acceptedRequests=new ArrayList<>();
+        acceptedRequests.add(request);
+        return request;
     }
 }

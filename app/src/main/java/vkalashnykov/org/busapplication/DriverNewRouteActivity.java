@@ -249,6 +249,7 @@ public class DriverNewRouteActivity extends AppCompatActivity
                             new vkalashnykov.org.busapplication.api.domain.Route(points,
                                     routeStatus);
                     driver.addRoute(route);
+                    driver.setCurrentRoute(route);
                     driverRef.setValue(driver);
                     setResult(RESULT_OK);
                     finish();

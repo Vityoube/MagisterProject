@@ -14,6 +14,7 @@ public class Driver {
     private BusInformation busInformation;
     private List<Distance> avgDistances;
     private List<String> requestIds;
+    private  Route currentRoute;
 
     public Driver() {
     }
@@ -127,5 +128,13 @@ public class Driver {
             requestIds =new ArrayList<>();
         requestIds.add(requestId);
         return requestId;
+    }
+
+    public Route getCurrentRoute() {
+        return currentRoute;
+    }
+
+    public void setCurrentRoute(Route currentRoute) {
+        this.currentRoute = currentRoute;
     }
 }

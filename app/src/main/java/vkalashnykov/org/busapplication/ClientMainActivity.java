@@ -691,4 +691,9 @@ public class ClientMainActivity extends FragmentActivity
     }
 
 
+    public void goToRequestList(View view) {
+        Intent goToRequestList=new Intent(this,ClientRequestListActivity.class);
+        goToRequestList.putExtra("CLIENT_KEY",userKey);
+        startActivity(goToRequestList);
+    }
 }

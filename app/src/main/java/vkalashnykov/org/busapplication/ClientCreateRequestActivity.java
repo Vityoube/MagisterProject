@@ -67,7 +67,7 @@
 //    private Position selectedLocation;
 //    private String comments;
 //    private String intentDriverName;
-//    private String clientKey,driverKey;
+//    private String clientKey,clientKey;
 //    private com.google.android.gms.maps.model.LatLng currentPlaceSelection;
 //    private ArrayList<Marker> currentRoute;
 //    private ArrayList<com.google.android.gms.maps.model.Polyline> currentRouteLines;
@@ -92,7 +92,7 @@
 //        };
 //        TextView driverName= (TextView) findViewById(R.id.driverName);
 //        intentDriverName=getIntent().getStringExtra("DRIVER_NAME");
-//        driverKey=getIntent().getStringExtra("DRIVER_KEY");
+//        clientKey=getIntent().getStringExtra("DRIVER_KEY");
 //        clientKey=getIntent().getStringExtra("CLIENT_KEY");
 //        driverName.setText(intentDriverName);
 //        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapClientMain);
@@ -139,7 +139,7 @@
 //        }
 //        googleMap.setMyLocationEnabled(true);
 //        DatabaseReference routeReference=database.getReference().
-//                child("routes").child(driverKey);
+//                child("routes").child(clientKey);
 //        routeReference.addValueEventListener(new ValueEventListener() {
 //            @Override
 //            public void onDataChange(DataSnapshot dataSnapshot) {
@@ -242,7 +242,7 @@
 //            }
 //            DatabaseReference requestsReference=database.getReference().child("requests");
 //
-//            Request request=new Request(clientKey,driverKey,messages, currentDate,);
+//            Request request=new Request(clientKey,clientKey,messages, currentDate,);
 //            requestsReference.push().setValue(request);
 //            finish();
 //            Toast.makeText(this,R.string.request_success,Toast.LENGTH_SHORT).show();

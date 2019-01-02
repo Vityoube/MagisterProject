@@ -56,7 +56,9 @@
         <activity android:name=".DriverNewRouteActivity" />
         <activity android:name=".DriverRoutesHistoryActivity" />
         <activity android:name=".DriverRequestDetailsActivity" />
-        <activity android:name=".DriverRequestListActivity"></activity>
+        <activity android:name=".DriverRequestListActivity" />
+        <activity android:name=".ClientRequestDetailsActivity" />
+        <activity android:name=".ClientRequestListActivity"></activity>
     </application>
 
 </manifest>

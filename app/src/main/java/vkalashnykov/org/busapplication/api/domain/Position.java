@@ -1,6 +1,8 @@
 package vkalashnykov.org.busapplication.api.domain;
 
+
 import java.io.Serializable;
+import java.text.DecimalFormat;
 
 public class Position implements Serializable{
     private Double latitude;
@@ -49,9 +51,10 @@ public class Position implements Serializable{
 
     @Override
     public String toString() {
+        DecimalFormat format=new DecimalFormat("#.#####");
         return "[" +
-                latitude +
-                ", " + longitude +
+                 format.format(latitude) +
+                ", " + format.format(longitude)+
                 ']';
     }
 }

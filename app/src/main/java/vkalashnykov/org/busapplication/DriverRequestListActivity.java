@@ -27,13 +27,14 @@ public class DriverRequestListActivity extends AppCompatActivity {
     private FirebaseDatabase firebaseDatabase=FirebaseDatabase.getInstance();
     private DatabaseReference requestsRef;
     private FirebaseListAdapter<String> requestFirebaseListAdapter;
+    String driverKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_request_list);
         requestList=findViewById(R.id.requestList);
-        String driverKey=getIntent().getStringExtra("DRIVER_KEY");
+        driverKey=getIntent().getStringExtra("DRIVER_KEY");
         requestsRef=firebaseDatabase.getReference().child("drivers").child(driverKey).child("requestIds");
         initializeListView();
 
@@ -84,6 +85,7 @@ public class DriverRequestListActivity extends AppCompatActivity {
                 Intent goToRequestDetails=new Intent(DriverRequestListActivity.this
                         ,DriverRequestDetailsActivity.class);
                 goToRequestDetails.putExtra("REQUEST_KEY",requestKey);
+                goToRequestDetails.putExtra("DRIVER_KEY",driverKey);
                 startActivity(goToRequestDetails);
 
             }

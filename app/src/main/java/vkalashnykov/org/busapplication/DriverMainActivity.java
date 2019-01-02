@@ -62,8 +62,7 @@ public class DriverMainActivity extends FragmentActivity
 
     private FirebaseAuth mAuth;
 
-    private String userEmail;
-    private String driverName;
+    private String driverName="";
     private String driverKey;
     private boolean promptExit = true;
     private DatabaseReference driverRef;
@@ -104,14 +103,43 @@ public class DriverMainActivity extends FragmentActivity
 
 
         welcomeMessage = (TextView) findViewById(R.id.welcome);
-        userEmail = intent.getStringExtra("USER_EMAIL");
         driverName = intent.getStringExtra("NAME");
-        welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
+
         driverKey = intent.getStringExtra("USER_KEY");
         mAuth = FirebaseAuth.getInstance();
         driverRef = FirebaseDatabase.getInstance().getReference().child("drivers").child(driverKey);
+        setDriverFirstName();
+
         busDetails=(DriverBusCurrentDetails)findViewById(R.id.driverBusCurrentDetails);
         updateBusInformation();
+    }
+
+    private void setDriverFirstName() {
+        driverRef.child("firstName").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String firstName=dataSnapshot.getValue(String.class);
+                driverName+=firstName;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        driverRef.child("lastName").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String lastName=dataSnapshot.getValue(String.class);
+                driverName+=lastName;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
     }
 
     private void updateBusInformation() {
@@ -160,7 +188,7 @@ public class DriverMainActivity extends FragmentActivity
 
     public void userDetails(View view) {
         Intent userDetailsIntent = new Intent(this, DriverUserDetailsActivity.class);
-        userDetailsIntent.putExtra("USER_EMAIL", userEmail);
+//        userDetailsIntent.putExtra("USER_EMAIL", userEmail);
         userDetailsIntent.putExtra("DRIVER_KEY",driverKey);
         startActivity(userDetailsIntent);
 

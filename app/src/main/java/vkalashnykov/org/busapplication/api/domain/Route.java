@@ -88,4 +88,10 @@ public class Route implements Serializable{
         acceptedRequests.add(request);
         return request;
     }
+
+    public Request removeAcceptedRequest(Request request){
+        if (acceptedRequests!=null && acceptedRequests.contains(request))
+            acceptedRequests.remove(request);
+        return request;
+    }
 }

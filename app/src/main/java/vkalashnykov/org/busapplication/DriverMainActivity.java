@@ -15,6 +15,8 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -47,11 +49,14 @@ import java.util.List;
 
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Position;
+import vkalashnykov.org.busapplication.api.domain.Request;
+import vkalashnykov.org.busapplication.api.domain.Route;
 import vkalashnykov.org.busapplication.components.DriverBusCurrentDetails;
 
 @SuppressWarnings("deprecation")
 public class DriverMainActivity extends FragmentActivity
-        implements OnMapReadyCallback, android.location.LocationListener {
+        implements OnMapReadyCallback, android.location.LocationListener
+{
 
     //TODO: add possibilty to List Requests and change their status
     private static final int ADD_NEW_ROUTE_REQUEST = 1;
@@ -67,6 +72,12 @@ public class DriverMainActivity extends FragmentActivity
     private boolean promptExit = true;
     private DatabaseReference driverRef;
     private DriverBusCurrentDetails busDetails;
+    private Button updateButton;
+    LinearLayout updateRoutePanel;
+    private String buttonText="";
+    private  static  final String START_ROUTE="startRoute";
+    private  static  final String FINISH_ROUTE="finishRoute";
+    private boolean routeIsStarted;
 
 
     @Override
@@ -86,6 +97,7 @@ public class DriverMainActivity extends FragmentActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        routeIsStarted=false;
         super.onCreate(savedInstanceState);
         Intent intent = getIntent();
         setContentView(R.layout.activity_driver_main);
@@ -103,15 +115,71 @@ public class DriverMainActivity extends FragmentActivity
 
 
         welcomeMessage = (TextView) findViewById(R.id.welcome);
+
         driverName = intent.getStringExtra("NAME");
 
         driverKey = intent.getStringExtra("USER_KEY");
         mAuth = FirebaseAuth.getInstance();
         driverRef = FirebaseDatabase.getInstance().getReference().child("drivers").child(driverKey);
         setDriverFirstName();
-
+        updateRoutePanel=findViewById(R.id.routeUpdatePanel);
+        updateRoutePanel.setVisibility(View.VISIBLE);
+        updateButton=findViewById(R.id.updateRoute);
         busDetails=(DriverBusCurrentDetails)findViewById(R.id.driverBusCurrentDetails);
         updateBusInformation();
+        updateViewFromCurrentRoute();
+    }
+
+    private void updateViewFromCurrentRoute() {
+        driverRef.child("currentRoute").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Route currentRoute=dataSnapshot.getValue(Route.class);
+                if (currentRoute==null ||
+                        getString(R.string.finished).equals(currentRoute.getStatus())){
+                        updateButton.setVisibility(View.GONE);
+                        updateRoutePanel.setVisibility(View.VISIBLE);
+                } else {
+                    updateButton.setVisibility(View.VISIBLE);
+                    if (getString(R.string.opened).equals(currentRoute.getStatus())){
+                        updateRoutePanel.setVisibility(View.VISIBLE);
+                        updateButton.setText(R.string.start_route);
+                        updateButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startRoute();
+                            }
+                        });
+                    } else if (getString(R.string.inprogress).equals(currentRoute.getStatus())){
+                        routeIsStarted=true;
+                        updateRoutePanel.setVisibility(View.GONE);
+                        updateButton.setText(R.string.finish_route);
+                        updateButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                finishRoute();
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void finishRoute() {
+        driverRef.child("currentRoute").child("status").setValue(getString(R.string.finished));
+        routeIsStarted=false;
+        driverRef.child("currentRoute").setValue(null);
+        map.clear();
+    }
+
+    private void startRoute() {
+        driverRef.child("currentRoute").child("status").setValue(getString(R.string.inprogress));
     }
 
     private void setDriverFirstName() {
@@ -208,6 +276,58 @@ public class DriverMainActivity extends FragmentActivity
         driverRef.child("currentPosition").setValue(new Position(currentPosition.latitude,
                 currentPosition.longitude));
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(currentPosition, 15));
+        if (routeIsStarted)
+            compareDriverLocationWithRequestDestinations(location);
+    }
+
+    private void compareDriverLocationWithRequestDestinations(final Location driverLocation) {
+        driverRef.child("currentRoute").child("acceptedRequests")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot requestSnapshot :dataSnapshot.getChildren()){
+                    Request acceptedRequest=requestSnapshot.getValue(Request.class);
+                    Location requestDestinationLocation=new Location("");
+                    requestDestinationLocation.setLatitude(acceptedRequest.getTo().getLatitude());
+                    requestDestinationLocation.setLongitude(acceptedRequest.getTo().getLongitude());
+                    if (requestDestinationLocation.distanceTo(driverLocation)<=100){
+                        updateDriverBusInformation(acceptedRequest);
+                        removeCustomerRequestFromRoute(requestSnapshot.getKey());
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void updateDriverBusInformation(final Request acceptedRequest) {
+        driverRef.child("busInformation").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                BusInformation busInformation=dataSnapshot.getValue(BusInformation.class);
+                int requestSeats=acceptedRequest.getSeatsNumber();
+                int requestTrunk=acceptedRequest.getTrunk();
+                int requestSalonTrunk=acceptedRequest.getSalonTrunk();
+                busInformation.setOccupiedSeats(busInformation.getOccupiedSeats()-requestSeats);
+                busInformation.setOccupiedTrunk(busInformation.getOccupiedTrunk()-requestTrunk);
+                busInformation.setOccupiedSalonTrunk(
+                        busInformation.getOccupiedSalonTrunk()-requestSalonTrunk );
+                driverRef.child("busInformation").setValue(busInformation);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void removeCustomerRequestFromRoute(String requestKey) {
+        driverRef.child("currentRoute").child("acceptedRequests").child(requestKey).removeValue();
     }
 
     @Override
@@ -253,11 +373,31 @@ public class DriverMainActivity extends FragmentActivity
             LatLng centerPoland = new LatLng(52.0693234, 19.4781172);
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(centerPoland, 7));
         }
-        if (driverRef.child("routes").child(String.valueOf(0))!=null
-                && driverRef.child("routes")!=null)
+//        if (driverRef.child("routes").child(String.valueOf(0))!=null
+//                && driverRef.child("routes")!=null)
             drawRoute();
 
+
     }
+
+//    private void updateRoutePanelSetState() {
+//        driverRef.child("currentRoute").child("status").addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                String status=dataSnapshot.getValue(String.class);
+//                if (getString(R.string.inprogress).equals(status)) {
+//                    updateRoutePanel.setVisibility(View.GONE);
+//                }
+//                else
+//                    updateRoutePanel.setVisibility(View.VISIBLE);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
@@ -274,89 +414,94 @@ public class DriverMainActivity extends FragmentActivity
 
     public void drawRoute() {
         map.clear();
-        driverRef.child("routes")
+        driverRef.child("currentRoute")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(@NonNull DataSnapshot routesListSnapshot) {
-                        ArrayList<Position> points = new ArrayList<>();
-                        for (DataSnapshot pointSnapshot : routesListSnapshot.child(
-                                String.valueOf(routesListSnapshot.getChildrenCount() - 1))
-                                .child("points").getChildren()) {
-                            double latitude = pointSnapshot.child("latitude").getValue(Double.class);
-                            double longitude = pointSnapshot.child("longitude").getValue(Double.class);
-                            Position point = new Position(latitude, longitude);
-                            points.add(point);
-                        }
-                        if (points.isEmpty())
-                            return;
-                        LatLng origin = new LatLng(
-                                points.get(0).getLatitude(),
-                                points.get(0).getLongitude()
-                        );
-                        LatLng destination = new LatLng(
-                                points.get(points.size() - 1).getLatitude(),
-                                points.get(points.size() - 1).getLongitude()
-                        );
-                        List<LatLng> waypoints = new ArrayList<>();
-                        if (points.size() > 2) {
-                            for (int i = 1; i < points.size() - 1; i++) {
-                                LatLng waypoint = new LatLng(
-                                        points.get(i).getLatitude(),
-                                        points.get(i).getLongitude()
-                                );
-                                waypoints.add(waypoint);
-                            }
-                        }
-                        for (int i = 0; i < points.size(); i++) {
-                            MarkerOptions markerOptions = new MarkerOptions();
-                            markerOptions
-                                    .position(new LatLng(
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        Route currentRoute=dataSnapshot.getValue(Route.class);
+                        if (currentRoute!=null){
+                            ArrayList<Position> points=currentRoute.getPoints();
+                            if (points.isEmpty())
+                                return;
+                            LatLng origin = new LatLng(
+                                    points.get(0).getLatitude(),
+                                    points.get(0).getLongitude()
+                            );
+                            LatLng destination = new LatLng(
+                                    points.get(points.size() - 1).getLatitude(),
+                                    points.get(points.size() - 1).getLongitude()
+                            );
+                            List<LatLng> waypoints = new ArrayList<>();
+                            if (points.size() > 2) {
+                                for (int i = 1; i < points.size() - 1; i++) {
+                                    LatLng waypoint = new LatLng(
                                             points.get(i).getLatitude(),
                                             points.get(i).getLongitude()
-                                    ));
-                            if (i == 0)
-                                markerOptions.icon(BitmapDescriptorFactory
-                                        .defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                            else if (i == points.size() - 1)
-                                markerOptions.icon(BitmapDescriptorFactory
-                                        .defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                            else
-                                markerOptions.icon(BitmapDescriptorFactory
-                                        .defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
-                            map.addMarker(markerOptions);
-                        }
-                        DirectionDestinationRequest directionRequest = GoogleDirection
-                                .withServerKey(getString(R.string.api_key))
-                                .from(origin);
-                        if (!waypoints.isEmpty())
-                            directionRequest.and(waypoints);
-                        directionRequest
-                                .to(destination)
-                                .transportMode(TransportMode.DRIVING)
-                                .execute(new DirectionCallback() {
-                                    @Override
-                                    public void onDirectionSuccess(Direction direction, String rawBody) {
-                                        if (direction.isOK()) {
-                                            com.akexorcist.googledirection.model.Route route = direction.getRouteList().get(0);
-                                            for (Leg leg : route.getLegList()) {
-                                                List<Step> directionPoints = leg.getStepList();
-                                                ArrayList<PolylineOptions> polylinesOptions =
-                                                        DirectionConverter.createTransitPolyline(
-                                                                DriverMainActivity.this,
-                                                                directionPoints,
-                                                                5, Color.GREEN,
-                                                                5, Color.GREEN);
-                                                for (PolylineOptions polylineOptions : polylinesOptions)
-                                                    map.addPolyline(polylineOptions);
+                                    );
+                                    waypoints.add(waypoint);
+                                }
+                            }
+                            for (int i = 0; i < points.size(); i++) {
+                                MarkerOptions markerOptions = new MarkerOptions();
+                                markerOptions
+                                        .position(new LatLng(
+                                                points.get(i).getLatitude(),
+                                                points.get(i).getLongitude()
+                                        ));
+                                if (i == 0)
+                                    markerOptions.icon(BitmapDescriptorFactory
+                                            .defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
+                                else if (i == points.size() - 1)
+                                    markerOptions.icon(BitmapDescriptorFactory
+                                            .defaultMarker(BitmapDescriptorFactory.HUE_RED));
+                                else
+                                    markerOptions.icon(BitmapDescriptorFactory
+                                            .defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
+                                map.addMarker(markerOptions);
+                            }
+                            DirectionDestinationRequest directionRequest = GoogleDirection
+                                    .withServerKey(getString(R.string.api_key))
+                                    .from(origin);
+                            if (!waypoints.isEmpty())
+                                directionRequest.and(waypoints);
+                            directionRequest
+                                    .to(destination)
+                                    .transportMode(TransportMode.DRIVING)
+                                    .execute(new DirectionCallback() {
+                                        @Override
+                                        public void onDirectionSuccess(Direction direction, String rawBody) {
+                                            if (direction.isOK()) {
+                                                com.akexorcist.googledirection.model.Route route = direction.getRouteList().get(0);
+                                                for (Leg leg : route.getLegList()) {
+                                                    List<Step> directionPoints = leg.getStepList();
+                                                    ArrayList<PolylineOptions> polylinesOptions =
+                                                            DirectionConverter.createTransitPolyline(
+                                                                    DriverMainActivity.this,
+                                                                    directionPoints,
+                                                                    5, Color.GREEN,
+                                                                    5, Color.GREEN);
+                                                    for (PolylineOptions polylineOptions : polylinesOptions)
+                                                        map.addPolyline(polylineOptions);
+                                                }
                                             }
                                         }
-                                    }
 
-                                    @Override
-                                    public void onDirectionFailure(Throwable t) {
+                                        @Override
+                                        public void onDirectionFailure(Throwable t) {
 
-                                    }
-                                });
+                                        }
+                                    });
+                        }
+//                        ArrayList<Position> points = new ArrayList<>();
+//                        for (DataSnapshot pointSnapshot : dataSnapshot.child(
+//                                String.valueOf(dataSnapshot.getChildrenCount() - 1))
+//                                .child("points").getChildren()) {
+//                            double latitude = pointSnapshot.child("latitude").getValue(Double.class);
+//                            double longitude = pointSnapshot.child("longitude").getValue(Double.class);
+//                            Position point = new Position(latitude, longitude);
+//                            points.add(point);
+//                        }
+
                     }
 
                     @Override
@@ -379,4 +524,5 @@ public class DriverMainActivity extends FragmentActivity
         goToRequestList.putExtra("DRIVER_KEY",driverKey);
         startActivity(goToRequestList);
     }
+
 }

@@ -65,6 +65,8 @@
     <string name="reject">Cofnij</string>
     <string name="accept">Zaakceptuj</string>
     <string name="request_list">Lista żądań</string>
+    <string name="start_route">Zacznij jazdę</string>
+    <string name="finish_route">Zakończ jazdę</string>
 
 
 </resources>

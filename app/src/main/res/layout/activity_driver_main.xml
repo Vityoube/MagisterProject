@@ -61,7 +61,7 @@
                 android:name="com.google.android.gms.maps.SupportMapFragment"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight=".80">
+                android:layout_weight=".70">
 
             </fragment>
             <vkalashnykov.org.busapplication.components.DriverBusCurrentDetails
@@ -75,7 +75,8 @@
                 android:layout_height="0dp"
                 android:layout_weight="0.1"
                 android:orientation="horizontal"
-                android:weightSum="100">
+                android:weightSum="100"
+                android:id="@+id/routeUpdatePanel">
                 <Button
                     android:id="@+id/newRoute"
                     android:layout_width="0dp"
@@ -101,7 +102,12 @@
             </LinearLayout>
 
 
-
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:id="@+id/updateRoute"
+                android:layout_weight="0.1"
+                android:text="@string/start_route" />
 
 
 

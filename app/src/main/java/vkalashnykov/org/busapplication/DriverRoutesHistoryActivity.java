@@ -181,6 +181,9 @@ implements LocationListener, OnMapReadyCallback{
                                     .getValue(Route.class);
                             routesRef.child(String.valueOf(lastRouteInList+1)).setValue(routeToCopy);
                             driverRef.child("currentRoute").setValue(routeToCopy);
+                            driverRef.child("busInformation").child("occupiedSeats").setValue(0);
+                            driverRef.child("busInformation").child("occupiedTrunk").setValue(0);
+                            driverRef.child("busInformation").child("occupiedSalonTrunk").setValue(0);
 
                             setResult(RESULT_OK);
                             finish();

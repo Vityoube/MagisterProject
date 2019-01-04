@@ -45,6 +45,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Position;
 
@@ -250,6 +251,9 @@ public class DriverNewRouteActivity extends AppCompatActivity
                                     routeStatus);
                     driver.addRoute(route);
                     driver.setCurrentRoute(route);
+                    driver.getBusInformation().setOccupiedSeats(0);
+                    driver.getBusInformation().setOccupiedTrunk(0);
+                    driver.getBusInformation().setOccupiedSalonTrunk(0);
                     driverRef.setValue(driver);
                     setResult(RESULT_OK);
                     finish();

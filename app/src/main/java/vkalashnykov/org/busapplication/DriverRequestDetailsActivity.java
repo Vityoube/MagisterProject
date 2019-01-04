@@ -114,7 +114,7 @@ public class DriverRequestDetailsActivity extends AppCompatActivity {
                         List<Request> acceptedRequests=(ArrayList<Request>)dataSnapshot.getValue();
                         if (acceptedRequests==null)
                             acceptedRequests=new ArrayList<>();
-                        final List<Request> finalAcceptedRequests = acceptedRequests;
+                        final List<Request> finalAcceptedRequests = (ArrayList<Request>)acceptedRequests;
                         requestRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {

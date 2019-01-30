@@ -644,6 +644,8 @@ public class ClientMainActivity extends FragmentActivity
         requestRef.setValue(request);
         addRequestToDriver(requestRef.getKey());
         addRequestToClient(requestRef.getKey());
+        startRequestMarker.remove();
+        finishRequestMarker.remove();
     }
 
     private void addRequestToClient(final String key) {
@@ -674,6 +676,9 @@ public class ClientMainActivity extends FragmentActivity
                 if(requestIds==null)
                     requestIds=new ArrayList<String>();
                 requestIds.add(key);
+                requestIdsRef.setValue(requestIds);
+                String newKey=key+"1";
+                requestIds.set(requestIds.indexOf(key),newKey);
                 requestIdsRef.setValue(requestIds);
             }
 

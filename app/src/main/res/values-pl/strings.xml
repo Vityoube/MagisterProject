@@ -67,6 +67,7 @@
     <string name="request_list">Lista żądań</string>
     <string name="start_route">Zacznij jazdę</string>
     <string name="finish_route">Zakończ jazdę</string>
+    <string name="added_request_notification">%1$s dodał zgłoszenie</string>
 
 
 </resources>

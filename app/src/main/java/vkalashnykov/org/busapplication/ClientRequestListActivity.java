@@ -17,6 +17,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import vkalashnykov.org.busapplication.api.domain.Client;
+import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Request;
 
 public class ClientRequestListActivity extends AppCompatActivity {
@@ -57,7 +59,8 @@ public class ClientRequestListActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Request request=dataSnapshot.getValue(Request.class);
-                        requestLink.setText(request.getCreateDate());
+                        String requestId=dataSnapshot.getKey();
+                        setRequestLinkLabel(requestId,request.getCreateDate(),requestLink);
                         setOnClickListenerForLink(v,dataSnapshot.getKey());
                     }
 
@@ -71,6 +74,29 @@ public class ClientRequestListActivity extends AppCompatActivity {
 
         };
         requestList.setAdapter(requestFirebaseListAdapter);
+    }
+
+    private void setRequestLinkLabel(final String requestId, final String createDate,
+                                     final TextView requestLink) {
+        DatabaseReference driversRef=FirebaseDatabase.getInstance().getReference().child("drivers");
+        driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot driverSnapshot: dataSnapshot.getChildren()){
+                    Driver driver=driverSnapshot.getValue(Driver.class);
+                    if (driver.getRequestIds()!=null && driver.getRequestIds().contains(requestId)){
+                        requestLink.setText(requestLink.getText()
+                                +driver.getFirstName()+" "+driver.getLastName()+" "
+                                + createDate);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void setOnClickListenerForLink(View v, final String requestKey) {

@@ -17,10 +17,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import vkalashnykov.org.busapplication.api.domain.BusInformation;
-import vkalashnykov.org.busapplication.api.domain.Driver;
+import vkalashnykov.org.busapplication.api.domain.Client;
 import vkalashnykov.org.busapplication.api.domain.Request;
-import vkalashnykov.org.busapplication.components.DriverBusCurrentDetails;
 
 public class DriverRequestListActivity extends AppCompatActivity {
     private ListView requestList;
@@ -62,7 +60,8 @@ public class DriverRequestListActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Request request=dataSnapshot.getValue(Request.class);
-                        requestLink.setText(request.getCreateDate());
+                        String requestId=dataSnapshot.getKey();
+                        setRequestLinkLabel(requestId,request.getCreateDate(),requestLink);
                         setOnClickListenerForLink(v,dataSnapshot.getKey());
                     }
 
@@ -76,6 +75,29 @@ public class DriverRequestListActivity extends AppCompatActivity {
 
         };
         requestList.setAdapter(requestFirebaseListAdapter);
+    }
+
+    private void setRequestLinkLabel(final String requestId, final String createDate,
+                                     final TextView requestLink) {
+        DatabaseReference clientsRef=FirebaseDatabase.getInstance().getReference().child("clients");
+        clientsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot clientSnapshot: dataSnapshot.getChildren()){
+                    Client client=clientSnapshot.getValue(Client.class);
+                    if (client.getRequestIds()!=null && client.getRequestIds().contains(requestId)){
+                        requestLink.setText(requestLink.getText()
+                                +client.getFirstName()+" "+client.getLastName()+" "
+                        + createDate);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void setOnClickListenerForLink(View v, final String requestKey) {

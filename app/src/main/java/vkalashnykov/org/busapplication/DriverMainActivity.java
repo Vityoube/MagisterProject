@@ -10,6 +10,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
@@ -35,9 +36,11 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -67,7 +70,7 @@ public class DriverMainActivity extends FragmentActivity
 
     private FirebaseAuth mAuth;
 
-    private String driverName="";
+    private String driverName;
     private String driverKey;
     private boolean promptExit = true;
     private DatabaseReference driverRef;
@@ -116,7 +119,7 @@ public class DriverMainActivity extends FragmentActivity
 
         welcomeMessage = (TextView) findViewById(R.id.welcome);
 
-        driverName = intent.getStringExtra("NAME");
+        driverName = "";
 
         driverKey = intent.getStringExtra("USER_KEY");
         mAuth = FirebaseAuth.getInstance();
@@ -187,7 +190,8 @@ public class DriverMainActivity extends FragmentActivity
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String firstName=dataSnapshot.getValue(String.class);
-                driverName+=firstName;
+                driverName=driverName.concat(firstName);
+                welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
             }
 
             @Override
@@ -199,7 +203,8 @@ public class DriverMainActivity extends FragmentActivity
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String lastName=dataSnapshot.getValue(String.class);
-                driverName+=lastName;
+                driverName=driverName.concat(" "+lastName);
+                welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
             }
 
             @Override
@@ -207,7 +212,7 @@ public class DriverMainActivity extends FragmentActivity
 
             }
         });
-        welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
+
     }
 
     private void updateBusInformation() {
@@ -414,8 +419,8 @@ public class DriverMainActivity extends FragmentActivity
 
     public void drawRoute() {
         map.clear();
-        driverRef.child("currentRoute")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
+        final DatabaseReference currentRouteRef=driverRef.child("currentRoute");
+        currentRouteRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Route currentRoute=dataSnapshot.getValue(Route.class);
@@ -491,6 +496,7 @@ public class DriverMainActivity extends FragmentActivity
 
                                         }
                                     });
+                            addClientRequestPointsMarkers(currentRouteRef);
                         }
 //                        ArrayList<Position> points = new ArrayList<>();
 //                        for (DataSnapshot pointSnapshot : dataSnapshot.child(
@@ -510,6 +516,54 @@ public class DriverMainActivity extends FragmentActivity
                     }
                 });
 
+
+    }
+
+    private void addClientRequestPointsMarkers(DatabaseReference currentRouteRef) {
+        DatabaseReference acceptedRequestsRef=currentRouteRef.child("acceptedRequests");
+        if (acceptedRequestsRef!=null){
+            acceptedRequestsRef.addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    Request acceptedRequest=dataSnapshot.getValue(Request.class);
+                    MarkerOptions options=new MarkerOptions();
+                    LatLng fromPosition=new LatLng(
+                            acceptedRequest.getFrom().getLatitude(),
+                            acceptedRequest.getFrom().getLongitude());
+                    options.position(fromPosition);
+                    options.icon(BitmapDescriptorFactory
+                            .defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+                    map.addMarker(options);
+                    LatLng toPosition=new LatLng(
+                            acceptedRequest.getTo().getLatitude(),
+                            acceptedRequest.getTo().getLongitude());
+                    options.position(toPosition);
+                    options.icon(BitmapDescriptorFactory
+                            .defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
+                    map.addMarker(options);
+                }
+
+                @Override
+                public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        }
 
     }
 

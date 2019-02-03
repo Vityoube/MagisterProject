@@ -2,6 +2,7 @@ package vkalashnykov.org.busapplication.api.domain;
 
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.Polyline;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Route implements Serializable{
     private ArrayList<Position> points;
@@ -16,12 +18,16 @@ public class Route implements Serializable{
     private String status;
     private List<Distance> distances;
     private List<Request> acceptedRequests;
+    private List<Request> requests;
+    private  String routeKey;
 
     public Route() {
         points=new ArrayList<>();
         time=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         distances=new ArrayList<>();
         acceptedRequests=new ArrayList<>();
+        requests=new ArrayList<>();
+        routeKey= UUID.randomUUID().toString();
 
     }
 
@@ -31,6 +37,7 @@ public class Route implements Serializable{
         this.status=status;
         distances=new ArrayList<>();
         acceptedRequests=new ArrayList<>();
+        routeKey= UUID.randomUUID().toString();
     }
 
     public ArrayList<Position> getPoints() {
@@ -93,5 +100,34 @@ public class Route implements Serializable{
         if (acceptedRequests!=null && acceptedRequests.contains(request))
             acceptedRequests.remove(request);
         return request;
+    }
+
+    public List<Request> getRequests() {
+        return requests;
+    }
+
+    public void setRequests(List<Request> requests) {
+        this.requests = requests;
+    }
+
+    public Request addRequest(Request request){
+        if (requests==null)
+            requests=new ArrayList<>();
+        requests.add(request);
+        return request;
+    }
+
+    public Request removeRequest(Request request){
+        if (requests!=null && requests.contains(request))
+            requests.remove(request);
+        return request;
+    }
+
+    public String getRouteKey() {
+        return routeKey;
+    }
+
+    public void setRouteKey(String routeKey) {
+        this.routeKey = routeKey;
     }
 }

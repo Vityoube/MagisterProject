@@ -57,4 +57,15 @@ public class Client {
         requestIds.add(requestId);
         return requestId;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        Client otherClient=(Client)obj;
+        if (otherClient.getFirstName().equals(this.firstName)
+                && otherClient.getLastName().equals(this.lastName)
+        && otherClient.getUsername().equals(this.username))
+            return true;
+        else
+            return false;
+    }
 }

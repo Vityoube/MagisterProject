@@ -84,6 +84,7 @@ public class DriverMainActivity extends FragmentActivity
     private  static  final String FINISH_ROUTE="finishRoute";
     private boolean routeIsStarted;
     private String clientDetailsForRequestNotification;
+    private String currentRouteKey;
 
 
     @Override
@@ -134,134 +135,163 @@ public class DriverMainActivity extends FragmentActivity
         busDetails=(DriverBusCurrentDetails)findViewById(R.id.driverBusCurrentDetails);
         updateBusInformation();
         updateViewFromCurrentRoute();
-        handleRequests();
+//        handleRequests();
     }
 
-    private void handleRequests() {
-        driverRef.child("requestIds").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//    public void handleRequests() {
+//        driverRef.child("requestIds").addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                String requestId=dataSnapshot.getValue(String.class);
+//                handleRequest(requestId);
+//            }
+//
+//            @Override
+//            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
-            }
+//    public void handleRequest(final String requestId) {
+//        final DatabaseReference requestsRef=FirebaseDatabase.getInstance()
+//                .getReference().child("requests").child(requestId);
+//        requestsRef.addChildEventListener(new ChildEventListener() {
+//            @Override
+//            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//                if (requestId.equals(s)){
+//                    String requestStatus=dataSnapshot.child("status").getValue(String.class);
+//                    if (getString(R.string.raised).equals(requestStatus)){
+//                        final DatabaseReference requestRef=dataSnapshot.getRef();
+//                        requestsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//                            @Override
+//                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                                Request request=dataSnapshot.getValue(Request.class);
+//                                buildCreatedRequestNotification(requestId,request,requestRef);
+//
+//                            }
+//
+//                            @Override
+//                            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                            }
+//                        });
+//
+//                    }
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+//
+//            }
+//
+//            @Override
+//            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        } );
+//
+//    }
 
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                String requestId=dataSnapshot.getValue(String.class);
-                handleRequest(requestId);
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void handleRequest(final String requestId) {
-        final DatabaseReference requestRef=FirebaseDatabase.getInstance()
-                .getReference().child("requests").child(requestId);
-        requestRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull final DataSnapshot dataSnapshot) {
-                final Request request=dataSnapshot.getValue(Request.class);
-
-                if (getString(R.string.raised).equals(request.getStatus())){
-                    buildCreatedRequestNotification(requestId,request,requestRef);
-                }
-
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-
-    }
-
-    private void buildCreatedRequestNotification(final String requestId,
-                                                 final Request request,
-                                                 final DatabaseReference requestRef) {
-        DatabaseReference clientsRef=FirebaseDatabase.getInstance().getReference().child("clients");
-        clientsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot clientSnapshot : dataSnapshot.getChildren()){
-                    Client client=clientSnapshot.getValue(Client.class);
-                    if (client.getRequestIds()!=null && client.getRequestIds().contains(requestId)){
-                        AlertDialog.Builder requestNotificationBuilder=
-                                new AlertDialog.Builder(DriverMainActivity.this);
-                        clientDetailsForRequestNotification=
-                                client.getFirstName()+" "+client.getLastName();
-                        requestNotificationBuilder
-                                .setMessage(getString(R.string.added_request_notification,
-                                        clientDetailsForRequestNotification)
-                                );
-                        requestNotificationBuilder.setPositiveButton(R.string.accept,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        request.setStatus(getString(R.string.approved));
-                                        requestRef.child(requestId).setValue(request);
-                                        dialog.dismiss();
-                                        final DatabaseReference driverBusInformationRef=driverRef.child("busInformation");
-                                        driverBusInformationRef.addListenerForSingleValueEvent(
-                                                new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                                        BusInformation busInformation = dataSnapshot.getValue(BusInformation.class);
-
-                                                        busInformation
-                                                                .setOccupiedSeats(busInformation.getOccupiedSeats() + request.getSeatsNumber());
-                                                        busInformation.setOccupiedTrunk(busInformation.getOccupiedTrunk() +
-                                                                request.getSalonTrunk());
-                                                        busInformation.setOccupiedSalonTrunk(busInformation.getOccupiedSalonTrunk()
-                                                                + request.getSalonTrunk());
-                                                        driverBusInformationRef.setValue(busInformation);
-                                                        addRequestToRoute(requestRef);
-                                                    }
-
-                                                    @Override
-                                                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                                                    }
-                                                });
-                                    }
-                                });
-                        requestNotificationBuilder.setNegativeButton(R.string.reject,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        request.setStatus(getString(R.string.approved));
-                                        requestRef.child(requestId).setValue(request);
-                                        dialog.dismiss();
-                                    }
-                                });
-                        AlertDialog alertDialog = requestNotificationBuilder.create();
-                        alertDialog.show();
-
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
+//    public void buildCreatedRequestNotification(final String requestId,
+//                                                 final Request request,
+//                                                 final DatabaseReference requestRef) {
+//        DatabaseReference clientsRef=FirebaseDatabase.getInstance().getReference().child("clients");
+//        clientsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                for (DataSnapshot clientSnapshot : dataSnapshot.getChildren()){
+//                    Client client=clientSnapshot.getValue(Client.class);
+//                    if (client.getRequestIds()!=null && client.getRequestIds().contains(requestId)){
+//                        AlertDialog.Builder requestNotificationBuilder=
+//                                new AlertDialog.Builder(DriverMainActivity.this);
+//                        clientDetailsForRequestNotification=
+//                                client.getFirstName()+" "+client.getLastName();
+//                        requestNotificationBuilder
+//                                .setMessage(getString(R.string.added_request_notification,
+//                                        clientDetailsForRequestNotification)
+//                                );
+//                        requestNotificationBuilder.setPositiveButton(R.string.accept,
+//                                new DialogInterface.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(DialogInterface dialog, int which) {
+//                                        request.setStatus(getString(R.string.approved));
+//                                        requestRef.child(requestId).setValue(request);
+//                                        dialog.dismiss();
+//                                        final DatabaseReference driverBusInformationRef=driverRef.child("busInformation");
+//                                        driverBusInformationRef.addListenerForSingleValueEvent(
+//                                                new ValueEventListener() {
+//                                                    @Override
+//                                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                                                        BusInformation busInformation = dataSnapshot.getValue(BusInformation.class);
+//
+//                                                        busInformation
+//                                                                .setOccupiedSeats(busInformation.getOccupiedSeats() + request.getSeatsNumber());
+//                                                        busInformation.setOccupiedTrunk(busInformation.getOccupiedTrunk() +
+//                                                                request.getSalonTrunk());
+//                                                        busInformation.setOccupiedSalonTrunk(busInformation.getOccupiedSalonTrunk()
+//                                                                + request.getSalonTrunk());
+//                                                        driverBusInformationRef.setValue(busInformation);
+//                                                        addRequestToRoute(requestRef);
+//                                                    }
+//
+//                                                    @Override
+//                                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//                                                    }
+//                                                });
+//                                    }
+//                                });
+//                        requestNotificationBuilder.setNegativeButton(R.string.reject,
+//                                new DialogInterface.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(DialogInterface dialog, int which) {
+//                                        request.setStatus(getString(R.string.approved));
+//                                        requestRef.child(requestId).setValue(request);
+//                                        dialog.dismiss();
+//                                    }
+//                                });
+//                        AlertDialog alertDialog = requestNotificationBuilder.create();
+//                        alertDialog.show();
+//
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
     private void addRequestToRoute(final DatabaseReference requestRef) {
         driverRef.child("currentRoute").child("acceptedRequests")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -304,8 +334,10 @@ public class DriverMainActivity extends FragmentActivity
                         getString(R.string.finished).equals(currentRoute.getStatus())){
                         updateButton.setVisibility(View.GONE);
                         updateRoutePanel.setVisibility(View.VISIBLE);
+                        currentRouteKey=null;
                 } else {
                     updateButton.setVisibility(View.VISIBLE);
+                    currentRouteKey=currentRoute.getRouteKey();
                     if (getString(R.string.opened).equals(currentRoute.getStatus())){
                         updateRoutePanel.setVisibility(View.VISIBLE);
                         updateButton.setText(R.string.start_route);
@@ -351,9 +383,21 @@ public class DriverMainActivity extends FragmentActivity
         driverRef.child("firstName").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String firstName=dataSnapshot.getValue(String.class);
-                driverName=driverName.concat(firstName);
-                welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
+                final String firstName=dataSnapshot.getValue(String.class);
+                driverRef.child("lastName").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String lastName=dataSnapshot.getValue(String.class);
+                        driverName=firstName+" "+lastName;
+                        welcomeMessage.setText(getResources().getString(R.string.welcome) +
+                                ", " + driverName + "!");
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
             }
 
             @Override
@@ -361,19 +405,7 @@ public class DriverMainActivity extends FragmentActivity
 
             }
         });
-        driverRef.child("lastName").addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String lastName=dataSnapshot.getValue(String.class);
-                driverName=driverName.concat(" "+lastName);
-                welcomeMessage.setText(getResources().getString(R.string.welcome) + ", " + driverName + "!");
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
 
     }
 
@@ -738,6 +770,7 @@ public class DriverMainActivity extends FragmentActivity
     public void goToRequestList(View view) {
         Intent goToRequestList=new Intent(this,DriverRequestListActivity.class);
         goToRequestList.putExtra("DRIVER_KEY",driverKey);
+        goToRequestList.putExtra("ROUTE_KEY",currentRouteKey);
         startActivity(goToRequestList);
     }
 

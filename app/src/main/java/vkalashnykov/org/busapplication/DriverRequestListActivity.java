@@ -19,13 +19,15 @@ import com.google.firebase.database.ValueEventListener;
 
 import vkalashnykov.org.busapplication.api.domain.Client;
 import vkalashnykov.org.busapplication.api.domain.Request;
+import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class DriverRequestListActivity extends AppCompatActivity {
     private ListView requestList;
     private FirebaseDatabase firebaseDatabase=FirebaseDatabase.getInstance();
     private DatabaseReference requestsRef;
-    private FirebaseListAdapter<String> requestFirebaseListAdapter;
+    private FirebaseListAdapter<Request> requestFirebaseListAdapter;
     String driverKey;
+    String currentRouteKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +35,8 @@ public class DriverRequestListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_driver_request_list);
         requestList=findViewById(R.id.requestList);
         driverKey=getIntent().getStringExtra("DRIVER_KEY");
-        requestsRef=firebaseDatabase.getReference().child("drivers").child(driverKey).child("requestIds");
+        requestsRef=firebaseDatabase.getReference().child("requests");
+        currentRouteKey=getIntent().getStringExtra("ROUTE_KEY");
         initializeListView();
 
     }
@@ -45,39 +48,24 @@ public class DriverRequestListActivity extends AppCompatActivity {
     }
 
     private void setupListView(ListView requestList) {
-        Query requestQuery = requestsRef.orderByKey();
-        FirebaseListOptions listOptions = new FirebaseListOptions.Builder<String>()
+        Query requestQuery = requestsRef.orderByChild("routeKey").equalTo(currentRouteKey);
+        FirebaseListOptions listOptions = new FirebaseListOptions.Builder<Request>()
                 .setLayout(R.layout.request_item)
-                .setQuery(requestQuery, String.class)
+                .setQuery(requestQuery, Request.class)
                 .build();
-        requestFirebaseListAdapter = new FirebaseListAdapter<String>(listOptions) {
+        requestFirebaseListAdapter = new FirebaseListAdapter<Request>(listOptions) {
             @Override
-            protected void populateView(final View v, String model, int position) {
+            protected void populateView(final View v, final Request model, int position) {
                 final TextView requestLink = v.findViewById(R.id.requestLink);
-                DatabaseReference requestRef=firebaseDatabase.getReference().child("requests")
-                        .child(model);
-                requestRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        Request request=dataSnapshot.getValue(Request.class);
-                        String requestId=dataSnapshot.getKey();
-                        setRequestLinkLabel(requestId,request.getCreateDate(),requestLink);
-                        setOnClickListenerForLink(v,dataSnapshot.getKey());
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
-
+                setRequestLinkLabel(model,requestLink);
+                setOnClickListenerForLink(v,getRef(position).getKey());
             }
 
         };
         requestList.setAdapter(requestFirebaseListAdapter);
     }
 
-    private void setRequestLinkLabel(final String requestId, final String createDate,
+    private void setRequestLinkLabel(final Request request,
                                      final TextView requestLink) {
         DatabaseReference clientsRef=FirebaseDatabase.getInstance().getReference().child("clients");
         clientsRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -85,10 +73,12 @@ public class DriverRequestListActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot clientSnapshot: dataSnapshot.getChildren()){
                     Client client=clientSnapshot.getValue(Client.class);
-                    if (client.getRequestIds()!=null && client.getRequestIds().contains(requestId)){
-                        requestLink.setText(requestLink.getText()
-                                +client.getFirstName()+" "+client.getLastName()+" "
-                        + createDate);
+                    String clientKey=clientSnapshot.getKey();
+                    if (clientKey.equals(request.getClientKey())
+                            && currentRouteKey!=null
+                            && currentRouteKey.equals(request.getRouteKey()) ){
+                        requestLink.setText(client.getFirstName()+" "+client.getLastName()+" "
+                        + request.getCreateDate());
                     }
                 }
             }

@@ -52,7 +52,7 @@
         <activity
             android:name=".ClientUserDetailsActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".ClientCreateRequestActivity" />
+        <!--<activity android:name=".ClientCreateRequestActivity" />-->
         <activity android:name=".DriverNewRouteActivity" />
         <activity android:name=".DriverRoutesHistoryActivity" />
         <activity android:name=".DriverRequestDetailsActivity" />

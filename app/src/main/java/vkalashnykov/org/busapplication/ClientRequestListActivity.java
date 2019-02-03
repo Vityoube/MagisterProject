@@ -17,15 +17,19 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
-import vkalashnykov.org.busapplication.api.domain.Client;
+import java.util.List;
+
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Request;
+import vkalashnykov.org.busapplication.api.domain.Route;
 
 public class ClientRequestListActivity extends AppCompatActivity {
     private ListView requestList;
     private FirebaseDatabase firebaseDatabase=FirebaseDatabase.getInstance();
     private DatabaseReference requestsRef;
-    private FirebaseListAdapter<String> requestFirebaseListAdapter;
+    private DatabaseReference clientRef;
+    private FirebaseListAdapter<Request> requestFirebaseListAdapter;
+    private List<String> driverKeys;
     String clientKey;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +37,24 @@ public class ClientRequestListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_client_request_list);
         requestList=findViewById(R.id.requestList);
         clientKey =getIntent().getStringExtra("CLIENT_KEY");
-        requestsRef=firebaseDatabase.getReference().child("clients").child(clientKey).child("requestIds");
+        clientRef=firebaseDatabase.getReference().child("clients").child(clientKey);
+        requestsRef =firebaseDatabase.getReference().child("requests");
+//        getDriverKeys();
         initializeListView();
+    }
+
+    private void getDriverKeys() {
+        requestsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void initializeListView() {
@@ -44,31 +64,17 @@ public class ClientRequestListActivity extends AppCompatActivity {
     }
 
     private void setupListView(ListView requestList) {
-        Query requestQuery = requestsRef.orderByKey();
-        FirebaseListOptions listOptions = new FirebaseListOptions.Builder<String>()
+        Query requestQuery = requestsRef.orderByChild("clientKey").equalTo(clientKey);
+        FirebaseListOptions listOptions = new FirebaseListOptions.Builder<Request>()
                 .setLayout(R.layout.request_item)
-                .setQuery(requestQuery, String.class)
+                .setQuery(requestQuery, Request.class)
                 .build();
-        requestFirebaseListAdapter = new FirebaseListAdapter<String>(listOptions) {
+        requestFirebaseListAdapter = new FirebaseListAdapter<Request>(listOptions) {
             @Override
-            protected void populateView(final View v, String model, int position) {
+            protected void populateView(final View v, Request model, int position) {
                 final TextView requestLink = v.findViewById(R.id.requestLink);
-                DatabaseReference requestRef=firebaseDatabase.getReference().child("requests")
-                        .child(model);
-                requestRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        Request request=dataSnapshot.getValue(Request.class);
-                        String requestId=dataSnapshot.getKey();
-                        setRequestLinkLabel(requestId,request.getCreateDate(),requestLink);
-                        setOnClickListenerForLink(v,dataSnapshot.getKey());
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+                setRequestLinkLabel(model,requestLink);
+                setOnClickListenerForLink(v,getRef(position).getKey());
 
             }
 
@@ -76,7 +82,7 @@ public class ClientRequestListActivity extends AppCompatActivity {
         requestList.setAdapter(requestFirebaseListAdapter);
     }
 
-    private void setRequestLinkLabel(final String requestId, final String createDate,
+    private void setRequestLinkLabel(final Request request,
                                      final TextView requestLink) {
         DatabaseReference driversRef=FirebaseDatabase.getInstance().getReference().child("drivers");
         driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -84,10 +90,11 @@ public class ClientRequestListActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot driverSnapshot: dataSnapshot.getChildren()){
                     Driver driver=driverSnapshot.getValue(Driver.class);
-                    if (driver.getRequestIds()!=null && driver.getRequestIds().contains(requestId)){
-                        requestLink.setText(requestLink.getText()
-                                +driver.getFirstName()+" "+driver.getLastName()+" "
-                                + createDate);
+                    String driverKey=driverSnapshot.getKey();
+                    if (driverKey.equals(request.getDriverKey()) && driver.getCurrentRoute()!=null
+                    && driver.getCurrentRoute().getRouteKey().equals(request.getRouteKey()) ){
+                        requestLink.setText(driver.getFirstName()+" "+driver.getLastName()+" "
+                                + request.getCreateDate());
                     }
                 }
             }

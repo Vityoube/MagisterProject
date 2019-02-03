@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
+import vkalashnykov.org.busapplication.api.domain.Client;
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Position;
 import vkalashnykov.org.busapplication.api.domain.Request;
@@ -632,32 +633,30 @@ public class ClientMainActivity extends FragmentActivity
         selectionDestination=true;
     }
 
-    public void saveRequest(int seatsNumberValue, int trunkValue, int salonTrunkValue) {
-        DatabaseReference requestRef=FirebaseDatabase.getInstance().getReference()
+    public void saveRequest(final int seatsNumberValue, final int trunkValue, final int salonTrunkValue) {
+        final DatabaseReference requestRef=FirebaseDatabase.getInstance().getReference()
                 .child("requests").push();
-        Position from=new Position(startRequestMarker.getPosition().latitude,
+        final Position from=new Position(startRequestMarker.getPosition().latitude,
                 startRequestMarker.getPosition().longitude);
-        Position to=new Position(finishRequestMarker.getPosition().latitude,
+        final Position to=new Position(finishRequestMarker.getPosition().latitude,
                 finishRequestMarker.getPosition().longitude);
-        Request request=new Request(from,to,getString(R.string.raised),
-                seatsNumberValue,trunkValue,salonTrunkValue);
-        requestRef.setValue(request);
-        addRequestToDriver(requestRef.getKey());
-        addRequestToClient(requestRef.getKey());
         startRequestMarker.remove();
+        startRequestMarker=null;
         finishRequestMarker.remove();
-    }
-
-    private void addRequestToClient(final String key) {
-        final DatabaseReference requestIdsRef=clientRef.child("requestIds");
-        requestIdsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        finishRequestMarker=null;
+        createRequestPanel.setVisibility(View.INVISIBLE);
+        selectionOrigin=true;
+        selectionDestination=true;
+        selectedDriverRef.child("currentRoute").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                List<String> requestIds=(ArrayList<String>)dataSnapshot.getValue();
-                if(requestIds==null)
-                    requestIds=new ArrayList<String>();
-                requestIds.add(key);
-                requestIdsRef.setValue(requestIds);
+                Route route=dataSnapshot.getValue(Route.class);
+                Request request=new Request(from,to,getString(R.string.opened),
+                        seatsNumberValue,trunkValue,salonTrunkValue,clientRef.getKey(),
+                        selectedDriverRef.getKey(),route.getRouteKey());
+                requestRef.setValue(request);
+                request.setStatus(getString(R.string.raised));
+                requestRef.setValue(request);
             }
 
             @Override
@@ -665,29 +664,63 @@ public class ClientMainActivity extends FragmentActivity
 
             }
         });
+
+
+
+//        requestRef.child("status").addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                String status=getString(R.string.raised);
+//                requestRef.child("status").setValue(status);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//        addRequestToDriver(requestRef.getKey());
+//        addRequestToClient(requestRef.getKey());
+
     }
 
-    private void addRequestToDriver(final String key) {
-        final DatabaseReference requestIdsRef=selectedDriverRef.child("requestIds");
-        requestIdsRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                List<String> requestIds=(ArrayList<String>)dataSnapshot.getValue();
-                if(requestIds==null)
-                    requestIds=new ArrayList<String>();
-                requestIds.add(key);
-                requestIdsRef.setValue(requestIds);
-                String newKey=key+"1";
-                requestIds.set(requestIds.indexOf(key),newKey);
-                requestIdsRef.setValue(requestIds);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
+//    public void addRequestToClient(final String key) {
+//        final DatabaseReference requestIdsRef=clientRef.child("requestIds");
+//        requestIdsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                List<String> requestIds=(ArrayList<String>)dataSnapshot.getValue();
+//                if(requestIds==null)
+//                    requestIds=new ArrayList<String>();
+//                requestIds.add(key);
+//                requestIdsRef.setValue(requestIds);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
+//
+//    public void addRequestToDriver(final String key) {
+//        final DatabaseReference requestIdsRef=selectedDriverRef.child("requestIds");
+//        requestIdsRef.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                List<String> requestIds=(ArrayList<String>)dataSnapshot.getValue();
+//                if(requestIds==null)
+//                    requestIds=new ArrayList<String>();
+//                requestIds.add(key);
+//                requestIdsRef.setValue(requestIds);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        });
+//    }
 
 
     public void callCreationRequestDialog(View view) {

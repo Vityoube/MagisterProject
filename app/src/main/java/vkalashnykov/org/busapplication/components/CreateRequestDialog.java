@@ -43,6 +43,7 @@ public class CreateRequestDialog extends Dialog implements View.OnClickListener 
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.cancelButton:
+                activity.cancelRequestCreation();
                 dismiss();
                 break;
             case R.id.submitButton:
@@ -51,9 +52,9 @@ public class CreateRequestDialog extends Dialog implements View.OnClickListener 
                 int salonTrunkValue=Integer.parseInt(salonTrunk.getText().toString());
                 if (seatsNumberValue>0 && trunkValue>0 && salonTrunkValue>0 && salonTrunkValue<10
                         && trunkValue<10 && seatsNumberValue<10){
-                    dismiss();
-                    activity.cancelRequestCreation();
                     activity.saveRequest(seatsNumberValue,trunkValue,salonTrunkValue);
+                    dismiss();
+
                 }
 
                 break;

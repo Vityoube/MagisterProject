@@ -12,13 +12,17 @@ public class Request {
     private int seatsNumber;
     private int trunk;
     private int salonTrunk;
+    private String clientKey;
+    private String driverKey;
+    private String routeKey;
 
 
     public Request() {
     }
 
     public Request(Position from, Position to, String status,
-                   int seatsNumber, int trunk, int salonTrunk) {
+                   int seatsNumber, int trunk, int salonTrunk, String clientKey,
+                   String driverKey, String routeKey) {
         this.from=from;
         this.to=to;
         createDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
@@ -26,6 +30,9 @@ public class Request {
         this.seatsNumber=seatsNumber;
         this.trunk=trunk;
         this.salonTrunk=salonTrunk;
+        this.clientKey=clientKey;
+        this.driverKey=driverKey;
+        this.routeKey=routeKey;
     }
 
 
@@ -83,5 +90,29 @@ public class Request {
 
     public void setSalonTrunk(int salonTrunk) {
         this.salonTrunk = salonTrunk;
+    }
+
+    public String getClientKey() {
+        return clientKey;
+    }
+
+    public void setClientKey(String clientKey) {
+        this.clientKey = clientKey;
+    }
+
+    public String getDriverKey() {
+        return driverKey;
+    }
+
+    public void setDriverKey(String driverKey) {
+        this.driverKey = driverKey;
+    }
+
+    public String getRouteKey() {
+        return routeKey;
+    }
+
+    public void setRouteKey(String routeKey) {
+        this.routeKey = routeKey;
     }
 }

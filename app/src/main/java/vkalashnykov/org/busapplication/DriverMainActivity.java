@@ -298,7 +298,8 @@ public class DriverMainActivity extends FragmentActivity
                 } else {
                     updateButton.setVisibility(View.VISIBLE);
                     currentRouteKey=currentRoute.getRouteKey();
-                    requestsQuery=requestsQuery.equalTo(currentRouteKey);
+                    requestsQuery=FirebaseDatabase.getInstance().getReference().child("requests")
+                            .orderByChild("routeKey").equalTo(currentRouteKey);
                     requestsQuery.addChildEventListener(requestsChildListener);
                     if (getString(R.string.opened).equals(currentRoute.getStatus())){
                         updateRoutePanel.setVisibility(View.VISIBLE);

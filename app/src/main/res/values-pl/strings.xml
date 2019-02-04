@@ -68,6 +68,7 @@
     <string name="start_route">Zacznij jazdę</string>
     <string name="finish_route">Zakończ jazdę</string>
     <string name="added_request_notification">%1$s dodał zgłoszenie</string>
-
+    <string name="request_details">Szczegóły żądania</string>
+    <string name="cancelled_request_notification">%1$s anulował zgłoszenie.</string>
 
 </resources>

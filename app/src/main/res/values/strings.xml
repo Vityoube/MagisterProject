@@ -68,5 +68,7 @@
     <string name="start_route">Start route</string>
     <string name="finish_route">Finish route</string>
     <string name="added_request_notification">%1$s added a request.</string>
+    <string name="request_details">Request details</string>
+    <string name="cancelled_request_notification">%1$s cancelled a request.</string>
 
 </resources>

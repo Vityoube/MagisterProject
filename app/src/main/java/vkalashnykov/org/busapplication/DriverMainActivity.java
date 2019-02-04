@@ -46,6 +46,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
@@ -85,6 +86,8 @@ public class DriverMainActivity extends FragmentActivity
     private boolean routeIsStarted;
     private String clientDetailsForRequestNotification;
     private String currentRouteKey;
+    private ChildEventListener requestsChildListener;
+    private Query requestsQuery;
 
 
     @Override
@@ -136,7 +139,118 @@ public class DriverMainActivity extends FragmentActivity
         updateBusInformation();
         updateViewFromCurrentRoute();
 //        handleRequests();
+        requestsQuery=FirebaseDatabase.getInstance().getReference().child("requests")
+                .orderByChild("routeKey");
+        requestsChildListener=new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final Request request=dataSnapshot.getValue(Request.class);
+                final String requestKey=dataSnapshot.getKey();
+                DatabaseReference clientRef=FirebaseDatabase.getInstance().getReference()
+                        .child("clients").child(request.getClientKey());
+                if (getString(R.string.raised).equals(request.getStatus())){
+
+                    clientRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            Client client=dataSnapshot.getValue(Client.class);
+                            AlertDialog.Builder requestAddedNotificationBuilder=
+                                    new AlertDialog.Builder(DriverMainActivity.this);
+                            requestAddedNotificationBuilder
+                                    .setMessage(
+                                            getString(R.string.added_request_notification,
+                                            client.getFirstName()+" "+client.getLastName())
+                                            )
+                                    .setPositiveButton(R.string.request_details,
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    Intent goToRequestDetails=new Intent(
+                                                            DriverMainActivity.this,
+                                                            DriverRequestDetailsActivity.class
+                                                    );
+                                                    goToRequestDetails.putExtra(
+                                                            "DRIVER_KEY",
+                                                            driverKey
+                                                            );
+                                                    goToRequestDetails.putExtra(
+                                                            "REQUEST_KEY",
+                                                            requestKey
+                                                    );
+                                                    startActivity(goToRequestDetails);
+                                                    dialog.dismiss();
+                                                }
+                                            })
+                                    .setNegativeButton(R.string.cancel,
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.dismiss();
+                                                }
+                                            })
+                                    .create()
+                                    .show();
+
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                } else if (getString(R.string.client_canceled).equals(request.getStatus())){
+                    clientRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            Client client=dataSnapshot.getValue(Client.class);
+                            AlertDialog.Builder cancelledRequestDialogBuilder
+                                    =new AlertDialog.Builder(DriverMainActivity.this);
+                            cancelledRequestDialogBuilder
+                                    .setMessage(getString(R.string.cancelled_request_notification,
+                                            client.getFirstName()+" "
+                                    +client.getLastName()))
+                                    .setPositiveButton("OK",
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    dialog.dismiss();
+                                                }
+                                            })
+                                    .create()
+                                    .show();
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
     }
+
+
 
 //    public void handleRequests() {
 //        driverRef.child("requestIds").addChildEventListener(new ChildEventListener() {
@@ -335,9 +449,12 @@ public class DriverMainActivity extends FragmentActivity
                         updateButton.setVisibility(View.GONE);
                         updateRoutePanel.setVisibility(View.VISIBLE);
                         currentRouteKey=null;
+                        requestsQuery.removeEventListener(requestsChildListener);
                 } else {
                     updateButton.setVisibility(View.VISIBLE);
                     currentRouteKey=currentRoute.getRouteKey();
+                    requestsQuery=requestsQuery.equalTo(currentRouteKey);
+                    requestsQuery.addChildEventListener(requestsChildListener);
                     if (getString(R.string.opened).equals(currentRoute.getStatus())){
                         updateRoutePanel.setVisibility(View.VISIBLE);
                         updateButton.setText(R.string.start_route);

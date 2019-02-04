@@ -640,10 +640,7 @@ public class ClientMainActivity extends FragmentActivity
                 startRequestMarker.getPosition().longitude);
         final Position to=new Position(finishRequestMarker.getPosition().latitude,
                 finishRequestMarker.getPosition().longitude);
-        startRequestMarker.remove();
-        startRequestMarker=null;
-        finishRequestMarker.remove();
-        finishRequestMarker=null;
+
         createRequestPanel.setVisibility(View.INVISIBLE);
         selectionOrigin=true;
         selectionDestination=true;
@@ -657,6 +654,8 @@ public class ClientMainActivity extends FragmentActivity
                 requestRef.setValue(request);
                 request.setStatus(getString(R.string.raised));
                 requestRef.setValue(request);
+                startRequestMarker.remove();
+                finishRequestMarker.remove();
             }
 
             @Override

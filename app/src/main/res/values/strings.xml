@@ -70,5 +70,7 @@
     <string name="added_request_notification">%1$s added a request.</string>
     <string name="request_details">Request details</string>
     <string name="cancelled_request_notification">%1$s cancelled a request.</string>
+    <string name="approved_request_notification">%1$s approved your request.</string>
+    <string name="rejected_request_notification">%1$s rejected your request.</string>
 
 </resources>

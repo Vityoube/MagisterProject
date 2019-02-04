@@ -70,5 +70,7 @@
     <string name="added_request_notification">%1$s dodał zgłoszenie</string>
     <string name="request_details">Szczegóły żądania</string>
     <string name="cancelled_request_notification">%1$s anulował zgłoszenie.</string>
+    <string name="approved_request_notification">%1$s zaakceptował twoje zgłoszenie.</string>
+    <string name="rejected_request_notification">%1$s wycofał towje zgłoszenie.</string>
 
 </resources>

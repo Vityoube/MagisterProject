@@ -1,7 +1,9 @@
 package vkalashnykov.org.busapplication;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -10,6 +12,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
@@ -46,6 +49,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -107,8 +111,8 @@ public class ClientMainActivity extends FragmentActivity
     private FirebaseListAdapter<Driver> driversAdapter;
     private DatabaseReference driverRef;
     private Marker driverPositionMarker;
-    private boolean selectionOrigin=true;
-    private boolean selectionDestination=true;
+    private boolean selectionOrigin = true;
+    private boolean selectionDestination = true;
     private Marker startRequestMarker;
     private Marker finishRequestMarker;
     private CreateRequestPanel createRequestPanel;
@@ -123,7 +127,7 @@ public class ClientMainActivity extends FragmentActivity
         String welcomeMessage = welcome.getText().toString() + ", " + getIntent().getStringExtra("NAME") + "!";
         userEmail = getIntent().getStringExtra("USER_EMAIL");
         userKey = getIntent().getStringExtra("USER_KEY");
-        clientRef=FirebaseDatabase.getInstance().getReference().child("clients").child(userKey);
+        clientRef = FirebaseDatabase.getInstance().getReference().child("clients").child(userKey);
         welcome.setText(welcomeMessage);
         routes = new ArrayList<>();
         currentDriverPositionMarker = null;
@@ -135,15 +139,84 @@ public class ClientMainActivity extends FragmentActivity
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1600);
         }
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        createRequestPanel=findViewById(R.id.createRequestPanel);
+        createRequestPanel = findViewById(R.id.createRequestPanel);
 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapClientMain);
         mapFragment.getMapAsync(this);
         initializeListView();
-        selectionOrigin=true;
-        selectionDestination=true;
+        selectionOrigin = true;
+        selectionDestination = true;
+        listenForRequestsModification();
 
+    }
+
+    private void listenForRequestsModification() {
+        Query clientRequestsQuery = database.getReference().child("requests")
+                .orderByChild("clientKey").equalTo(userKey);
+        ChildEventListener requestsListener = new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                final Request request = dataSnapshot.getValue(Request.class);
+                final AlertDialog.Builder requestChangedDialog =
+                        new AlertDialog.Builder(ClientMainActivity.this);
+                DatabaseReference driverRef = database.getReference()
+                        .child("drivers").child(request.getDriverKey());
+                driverRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        Driver driver = dataSnapshot.getValue(Driver.class);
+                        String driverName = driver.getFirstName() + " " + driver.getLastName();
+                        requestChangedDialog.setPositiveButton("OK",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.dismiss();
+                                    }
+                                });
+                        if (getString(R.string.driver_canceled).equals(request.getStatus())
+                                || getString(R.string.approved).equals(request.getStatus())) {
+                            if (getString(R.string.driver_canceled).equals(request.getStatus()))
+                                requestChangedDialog.setMessage(
+                                        getString(R.string.rejected_request_notification, driverName)
+                                );
+                            else if (getString(R.string.approved).equals(request.getStatus()))
+                                requestChangedDialog.setMessage(
+                                        getString(R.string.approved_request_notification, driverName)
+                                );
+                            requestChangedDialog.create().show();
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
+        clientRequestsQuery.addChildEventListener(requestsListener);
     }
 
     private void initializeListView() {
@@ -156,29 +229,29 @@ public class ClientMainActivity extends FragmentActivity
                 for (int i = 0; i < parent.getCount(); i++) {
                     if (i == position) {
                         parent.getChildAt(i).setBackgroundColor(Color.GREEN);
-                        selectedDriverRef=driversAdapter.getRef(position);
+                        selectedDriverRef = driversAdapter.getRef(position);
                         selectedDriverRef.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                Driver driver=dataSnapshot.getValue(Driver.class);
-                                if (driver.getRoutes()!=null && !driver.getRoutes().isEmpty()){
-                                    if (getCurrentRoute()==null ){
+                                Driver driver = dataSnapshot.getValue(Driver.class);
+                                if (driver.getRoutes() != null && !driver.getRoutes().isEmpty()) {
+                                    if (getCurrentRoute() == null) {
                                         setCurrentRoute(driver.getRoutes()
-                                                .get(driver.getRoutes().size()-1));
+                                                .get(driver.getRoutes().size() - 1));
                                         drawRouteOnMap(getCurrentRoute().getPoints());
-                                    } else if (getCurrentRoute()!=null &&
+                                    } else if (getCurrentRoute() != null &&
                                             !(getCurrentRoute().equals(
-                                                    driver.getRoutes().get(driver.getRoutes().size()-1)))){
+                                                    driver.getRoutes().get(driver.getRoutes().size() - 1)))) {
                                         setCurrentRoute(driver.getRoutes()
-                                                .get(driver.getRoutes().size()-1));
+                                                .get(driver.getRoutes().size() - 1));
                                         drawRouteOnMap(getCurrentRoute().getPoints());
                                     }
                                 }
-                                if (driver.getCurrentPosition()!=null){
-                                    if (driverPosition==null ){
+                                if (driver.getCurrentPosition() != null) {
+                                    if (driverPosition == null) {
                                         updateDriverMarker(driver.getCurrentPosition());
-                                    } else if (driverPosition!=null
-                                            && !(driverPosition.equals(driver.getCurrentPosition()))){
+                                    } else if (driverPosition != null
+                                            && !(driverPosition.equals(driver.getCurrentPosition()))) {
                                         updateDriverMarker(driver.getCurrentPosition());
                                     }
                                 }
@@ -201,13 +274,13 @@ public class ClientMainActivity extends FragmentActivity
     }
 
     private void updateDriverMarker(Position currentPosition) {
-        if (driverPositionMarker!=null)
+        if (driverPositionMarker != null)
             driverPositionMarker.remove();
-        driverPosition=currentPosition;
-        MarkerOptions markerOptions=new MarkerOptions();
-        markerOptions.position(new LatLng(currentPosition.getLatitude(),driverPosition.getLongitude()));
+        driverPosition = currentPosition;
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(new LatLng(currentPosition.getLatitude(), driverPosition.getLongitude()));
         markerOptions.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_action_bus));
-        driverPositionMarker=mMap.addMarker(markerOptions);
+        driverPositionMarker = mMap.addMarker(markerOptions);
     }
 
     private void listViewSetOnItemClickListener(ListView driverListView,
@@ -246,7 +319,7 @@ public class ClientMainActivity extends FragmentActivity
 
     private void drawRouteOnMap(ArrayList<Position> points) {
         mMap.clear();
-        for (Polyline polyline :currentRouteLines)
+        for (Polyline polyline : currentRouteLines)
             polyline.remove();
         currentRouteLines.clear();
         if (points.isEmpty())
@@ -301,7 +374,7 @@ public class ClientMainActivity extends FragmentActivity
                         if (direction.isOK()) {
                             com.akexorcist.googledirection.model.Route route = direction.getRouteList()
                                     .get(0);
-                            LatLngBounds.Builder cameraBounds=new LatLngBounds.Builder();
+                            LatLngBounds.Builder cameraBounds = new LatLngBounds.Builder();
                             cameraBounds.include(origin);
                             cameraBounds.include(destination);
                             for (Leg leg : route.getLegList()) {
@@ -317,7 +390,7 @@ public class ClientMainActivity extends FragmentActivity
                                 for (PolylineOptions polylineOptions : polylinesOptions)
                                     currentRouteLines.add(mMap.addPolyline(polylineOptions));
                                 mMap.moveCamera(CameraUpdateFactory
-                                        .newLatLngBounds(cameraBounds.build(),100));
+                                        .newLatLngBounds(cameraBounds.build(), 100));
                             }
                         }
                     }
@@ -481,12 +554,12 @@ public class ClientMainActivity extends FragmentActivity
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
-                if (selectionOrigin){
+                if (selectionOrigin) {
                     setOriginMarker(latLng);
-                    selectionOrigin=false;
-                } else if (selectionDestination){
+                    selectionOrigin = false;
+                } else if (selectionDestination) {
                     setDestinationMarker(latLng);
-                    selectionDestination=false;
+                    selectionDestination = false;
                     createRequestPanel.setVisibility(View.VISIBLE);
                     calculateDriveTime();
                 }
@@ -495,7 +568,7 @@ public class ClientMainActivity extends FragmentActivity
     }
 
     private void calculateDriveTime() {
-        List<LatLng> waypoints=new ArrayList<>();
+        List<LatLng> waypoints = new ArrayList<>();
 //        for (Polyline polyline :currentRouteLines){
 //            if (PolyUtil.isLocationOnPath(startRequestMarker.getPosition(),
 //                    polyline.getPoints(),true,100)
@@ -523,14 +596,13 @@ public class ClientMainActivity extends FragmentActivity
         directionRequest
                 .to(finishRequestMarker.getPosition())
                 .transportMode(TransportMode.DRIVING)
-                .execute(new DirectionCallback(){
-
+                .execute(new DirectionCallback() {
                     @Override
                     public void onDirectionSuccess(Direction direction, String rawBody) {
-                        if (direction.isOK()){
-                            long driveTime=0;
-                            for (Leg leg : direction.getRouteList().get(0).getLegList()){
-                                driveTime+=Long.parseLong(leg.getDuration().getValue());
+                        if (direction.isOK()) {
+                            long driveTime = 0;
+                            for (Leg leg : direction.getRouteList().get(0).getLegList()) {
+                                driveTime += Long.parseLong(leg.getDuration().getValue());
                             }
                             createRequestPanel.setDriveTime(driveTime);
                         }
@@ -544,31 +616,31 @@ public class ClientMainActivity extends FragmentActivity
 
     }
 
-    private void setDestinationMarker(LatLng latLng){
-        if (finishRequestMarker!=null)
+    private void setDestinationMarker(LatLng latLng) {
+        if (finishRequestMarker != null)
             finishRequestMarker.remove();
-        for (Polyline polyline : currentRouteLines){
-            if (PolyUtil.isLocationOnPath(latLng,polyline.getPoints(),true,100) ){
-                MarkerOptions destinationOptions=new MarkerOptions();
+        for (Polyline polyline : currentRouteLines) {
+            if (PolyUtil.isLocationOnPath(latLng, polyline.getPoints(), true, 100)) {
+                MarkerOptions destinationOptions = new MarkerOptions();
                 destinationOptions.icon(BitmapDescriptorFactory.defaultMarker());
                 destinationOptions.position(latLng);
                 destinationOptions.title(getString(R.string.finish));
-                finishRequestMarker=mMap.addMarker(destinationOptions);
+                finishRequestMarker = mMap.addMarker(destinationOptions);
             }
         }
 
     }
 
     private void setOriginMarker(LatLng latLng) {
-        if (startRequestMarker!=null)
+        if (startRequestMarker != null)
             startRequestMarker.remove();
-        for (Polyline polyline : currentRouteLines){
-            if (PolyUtil.isLocationOnPath(latLng,polyline.getPoints(),true,100) ){
-                MarkerOptions originOptions=new MarkerOptions();
+        for (Polyline polyline : currentRouteLines) {
+            if (PolyUtil.isLocationOnPath(latLng, polyline.getPoints(), true, 100)) {
+                MarkerOptions originOptions = new MarkerOptions();
                 originOptions.icon(BitmapDescriptorFactory.defaultMarker());
                 originOptions.position(latLng);
                 originOptions.title(getString(R.string.start));
-                startRequestMarker=mMap.addMarker(originOptions);
+                startRequestMarker = mMap.addMarker(originOptions);
             }
         }
 
@@ -592,8 +664,10 @@ public class ClientMainActivity extends FragmentActivity
         createRequestPanel.setVisibility(View.INVISIBLE);
         startRequestMarker.remove();
         finishRequestMarker.remove();
-        selectionOrigin=true;
-        selectionDestination=true;
+        startRequestMarker=null;
+        finishRequestMarker=null;
+        selectionOrigin = true;
+        selectionDestination = true;
     }
 
 
@@ -617,45 +691,49 @@ public class ClientMainActivity extends FragmentActivity
 //            });
 //        }
 
-    public void setCurrentRoute(Route route){
-        currentRoute=route;
+    public void setCurrentRoute(Route route) {
+        currentRoute = route;
     }
 
-    public Route getCurrentRoute(){
+    public Route getCurrentRoute() {
         return currentRoute;
     }
 
-    public void cancelRequestCreation(){
+    public void cancelRequestCreation() {
         createRequestPanel.setVisibility(View.INVISIBLE);
         startRequestMarker.remove();
         finishRequestMarker.remove();
-        selectionOrigin=true;
-        selectionDestination=true;
+        startRequestMarker=null;
+        finishRequestMarker=null;
+        selectionOrigin = true;
+        selectionDestination = true;
     }
 
     public void saveRequest(final int seatsNumberValue, final int trunkValue, final int salonTrunkValue) {
-        final DatabaseReference requestRef=FirebaseDatabase.getInstance().getReference()
+        final DatabaseReference requestRef = FirebaseDatabase.getInstance().getReference()
                 .child("requests").push();
-        final Position from=new Position(startRequestMarker.getPosition().latitude,
+        final Position from = new Position(startRequestMarker.getPosition().latitude,
                 startRequestMarker.getPosition().longitude);
-        final Position to=new Position(finishRequestMarker.getPosition().latitude,
+        final Position to = new Position(finishRequestMarker.getPosition().latitude,
                 finishRequestMarker.getPosition().longitude);
 
         createRequestPanel.setVisibility(View.INVISIBLE);
-        selectionOrigin=true;
-        selectionDestination=true;
+        selectionOrigin = true;
+        selectionDestination = true;
         selectedDriverRef.child("currentRoute").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Route route=dataSnapshot.getValue(Route.class);
-                Request request=new Request(from,to,getString(R.string.opened),
-                        seatsNumberValue,trunkValue,salonTrunkValue,clientRef.getKey(),
-                        selectedDriverRef.getKey(),route.getRouteKey());
+                Route route = dataSnapshot.getValue(Route.class);
+                Request request = new Request(from, to, getString(R.string.opened),
+                        seatsNumberValue, trunkValue, salonTrunkValue, clientRef.getKey(),
+                        selectedDriverRef.getKey(), route.getRouteKey());
                 requestRef.setValue(request);
                 request.setStatus(getString(R.string.raised));
                 requestRef.setValue(request);
                 startRequestMarker.remove();
                 finishRequestMarker.remove();
+                startRequestMarker=null;
+                finishRequestMarker=null;
             }
 
             @Override
@@ -663,7 +741,6 @@ public class ClientMainActivity extends FragmentActivity
 
             }
         });
-
 
 
 //        requestRef.child("status").addListenerForSingleValueEvent(new ValueEventListener() {
@@ -723,14 +800,14 @@ public class ClientMainActivity extends FragmentActivity
 
 
     public void callCreationRequestDialog(View view) {
-        CreateRequestDialog requestDialog=new CreateRequestDialog(this);
+        CreateRequestDialog requestDialog = new CreateRequestDialog(this);
         requestDialog.show();
     }
 
 
     public void goToRequestList(View view) {
-        Intent goToRequestList=new Intent(this,ClientRequestListActivity.class);
-        goToRequestList.putExtra("CLIENT_KEY",userKey);
+        Intent goToRequestList = new Intent(this, ClientRequestListActivity.class);
+        goToRequestList.putExtra("CLIENT_KEY", userKey);
         startActivity(goToRequestList);
     }
 }

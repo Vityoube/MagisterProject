@@ -16,6 +16,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
+import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -59,13 +60,16 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.PolyUtil;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Client;
 import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Position;
 import vkalashnykov.org.busapplication.api.domain.Request;
+import vkalashnykov.org.busapplication.api.domain.RequestNotified;
 import vkalashnykov.org.busapplication.api.domain.Route;
 import vkalashnykov.org.busapplication.components.CreateRequestDialog;
 import vkalashnykov.org.busapplication.components.CreateRequestPanel;
@@ -148,7 +152,82 @@ public class ClientMainActivity extends FragmentActivity
         selectionOrigin = true;
         selectionDestination = true;
         listenForRequestsModification();
+        listenForDriverIsnearNotifications();
 
+    }
+
+    private void listenForDriverIsnearNotifications() {
+        final DatabaseReference driversRef = database.getReference().child("drivers");
+        driversRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Map<String,Driver> drivers=(HashMap<String,Driver>)dataSnapshot.getValue();
+                for (String driverKey : drivers.keySet()) {
+                    driversRef.child(driverKey).addValueEventListener(new ValueEventListener() {
+                        private RequestNotified requestNotified;
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            Driver driver=dataSnapshot.getValue(Driver.class);
+                            if (driver.getCurrentRoute()!=null){
+                                Route driverCurrentRoute=driver.getCurrentRoute();
+                                for (Request clientRequest : driverCurrentRoute.getAcceptedRequests()){
+                                    if (userKey.equals(clientRequest.getClientKey())){
+                                        Location driverCurrentLocation=new Location("");
+                                        driverCurrentLocation.setLatitude(
+                                                driver.getCurrentPosition().getLatitude()
+                                        );
+                                        driverCurrentLocation.setLongitude(
+                                                driver.getCurrentPosition().getLongitude()
+                                        );
+                                        Location clientRequestFromLocation=new Location("");
+                                        clientRequestFromLocation.setLatitude(
+                                                clientRequest.getFrom().getLatitude()
+                                        );
+                                        clientRequestFromLocation.setLongitude(
+                                                clientRequest.getFrom().getLongitude()
+                                        );
+                                        if (driverCurrentLocation
+                                                .distanceTo(clientRequestFromLocation)<=100){
+                                            RequestNotified requestNotified=
+                                                    new RequestNotified(clientRequest);
+                                            if (this.requestNotified==null
+                                                    || !this.requestNotified.equals(requestNotified)){
+                                                this.requestNotified=requestNotified;
+                                                AlertDialog.Builder driverNearNotification
+                                                        =new AlertDialog.Builder(ClientMainActivity.this);
+                                                driverNearNotification.setMessage(
+                                                        getString(
+                                                        R.string.driver_near_start_point_notification,
+                                                        driver.getFirstName()+" "+driver.getLastName()
+                                                        )
+                                                ).setPositiveButton("OK",
+                                                        new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                dialog.dismiss();
+                                                            }
+                                                        }).create().show();
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void listenForRequestsModification() {
@@ -664,8 +743,8 @@ public class ClientMainActivity extends FragmentActivity
         createRequestPanel.setVisibility(View.INVISIBLE);
         startRequestMarker.remove();
         finishRequestMarker.remove();
-        startRequestMarker=null;
-        finishRequestMarker=null;
+        startRequestMarker = null;
+        finishRequestMarker = null;
         selectionOrigin = true;
         selectionDestination = true;
     }
@@ -703,8 +782,8 @@ public class ClientMainActivity extends FragmentActivity
         createRequestPanel.setVisibility(View.INVISIBLE);
         startRequestMarker.remove();
         finishRequestMarker.remove();
-        startRequestMarker=null;
-        finishRequestMarker=null;
+        startRequestMarker = null;
+        finishRequestMarker = null;
         selectionOrigin = true;
         selectionDestination = true;
     }
@@ -732,8 +811,8 @@ public class ClientMainActivity extends FragmentActivity
                 requestRef.setValue(request);
                 startRequestMarker.remove();
                 finishRequestMarker.remove();
-                startRequestMarker=null;
-                finishRequestMarker=null;
+                startRequestMarker = null;
+                finishRequestMarker = null;
             }
 
             @Override

@@ -49,13 +49,16 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 import vkalashnykov.org.busapplication.api.domain.BusInformation;
 import vkalashnykov.org.busapplication.api.domain.Client;
+import vkalashnykov.org.busapplication.api.domain.Driver;
 import vkalashnykov.org.busapplication.api.domain.Position;
 import vkalashnykov.org.busapplication.api.domain.Request;
+import vkalashnykov.org.busapplication.api.domain.RequestNotified;
 import vkalashnykov.org.busapplication.api.domain.Route;
 import vkalashnykov.org.busapplication.components.DriverBusCurrentDetails;
 
@@ -88,6 +91,8 @@ public class DriverMainActivity extends FragmentActivity
     private String currentRouteKey;
     private ChildEventListener requestsChildListener;
     private Query requestsQuery;
+    private WeakReference<DriverMainActivity> driverMainActivityWeakReference=new WeakReference<DriverMainActivity>
+            (DriverMainActivity.this);
 
 
     @Override
@@ -247,8 +252,77 @@ public class DriverMainActivity extends FragmentActivity
 
             }
         };
+        listenToAcceptedRequests();
     }
 
+    private void listenToAcceptedRequests() {
+        driverRef.addValueEventListener(new ValueEventListener() {
+            private List<RequestNotified> requestNotifiedList=new ArrayList<>();
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final Driver driver=dataSnapshot.getValue(Driver.class);
+                final Position driverPosition=driver.getCurrentPosition();
+                if (driver.getCurrentRoute()!=null){
+                    for (final Request acceptedRequest : driver.getCurrentRoute().getAcceptedRequests()){
+                        Position requestFromPosition=acceptedRequest.getFrom();
+                        Location driverLocation=new Location("");
+                        driverLocation.setLongitude(driverPosition.getLongitude());
+                        driverLocation.setLatitude(driverPosition.getLatitude());
+                        Location requestFromLocation=new Location("");
+                        requestFromLocation.setLatitude(requestFromPosition.getLatitude());
+                        requestFromLocation.setLongitude(requestFromPosition.getLongitude());
+                        if (driverLocation.distanceTo(requestFromLocation)<=100){
+                            DatabaseReference clientRef=FirebaseDatabase.getInstance()
+                                    .getReference().child("clients")
+                                    .child(acceptedRequest.getClientKey());
+
+                            clientRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                                    Client client=dataSnapshot.getValue(Client.class);
+                                    RequestNotified requestNotified=new RequestNotified(acceptedRequest);
+                                    if (!requestNotifiedList.contains(requestNotified)){
+                                        requestNotifiedList.add(requestNotified);
+                                        if (driverMainActivityWeakReference.get()!=null
+                                        && !driverMainActivityWeakReference.get().isFinishing()){
+                                            AlertDialog.Builder clientRequestNearNotification=
+                                                    new AlertDialog.Builder(DriverMainActivity.this);
+                                            clientRequestNearNotification
+                                                    .setMessage(getString(R.string.driver_client_is_near_notification,
+                                                            client.getFirstName()+" "
+                                                                    +client.getLastName()))
+                                                    .setPositiveButton("OK",
+                                                            new DialogInterface.OnClickListener() {
+                                                                @Override
+                                                                public void onClick(DialogInterface dialog, int which) {
+                                                                    dialog.dismiss();
+                                                                }
+                                                            }).create().show();
+                                        }
+
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                                }
+                            });
+                        }
+
+
+                    }
+                }
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
 
 
     private void addRequestToRoute(final DatabaseReference requestRef) {

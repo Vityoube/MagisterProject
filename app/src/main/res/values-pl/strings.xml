@@ -72,5 +72,9 @@
     <string name="cancelled_request_notification">%1$s anulował zgłoszenie.</string>
     <string name="approved_request_notification">%1$s zaakceptował twoje zgłoszenie.</string>
     <string name="rejected_request_notification">%1$s wycofał towje zgłoszenie.</string>
+    <string name="closed">Zamknięte</string>
+    <string name="driver_near_start_point_notification">%1$s znajduje się w pobliżu punktu poczatkowego\n
+        twojego zgłoszenia.</string>
+    <string name="driver_client_is_near_notification">%1$s oczekuje blisko w 100 metrach od ciebie.</string>
 
 </resources>

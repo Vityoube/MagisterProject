@@ -72,5 +72,8 @@
     <string name="cancelled_request_notification">%1$s cancelled a request.</string>
     <string name="approved_request_notification">%1$s approved your request.</string>
     <string name="rejected_request_notification">%1$s rejected your request.</string>
+    <string name="closed">Closed</string>
+    <string name="driver_near_start_point_notification">%1$s is near requested starting point.</string>
+    <string name="driver_client_is_near_notification">%1$s waits about 100m from you.</string>
 
 </resources>

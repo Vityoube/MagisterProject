@@ -115,4 +115,30 @@ public class Request {
     public void setRouteKey(String routeKey) {
         this.routeKey = routeKey;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Request request = (Request) o;
+
+        if (getSeatsNumber() != request.getSeatsNumber()) return false;
+        if (getTrunk() != request.getTrunk()) return false;
+        if (getSalonTrunk() != request.getSalonTrunk()) return false;
+        if (getCreateDate() != null ? !getCreateDate().equals(request.getCreateDate()) : request.getCreateDate() != null)
+            return false;
+        if (getStatus() != null ? !getStatus().equals(request.getStatus()) : request.getStatus() != null)
+            return false;
+        if (getFrom() != null ? !getFrom().equals(request.getFrom()) : request.getFrom() != null)
+            return false;
+        if (getTo() != null ? !getTo().equals(request.getTo()) : request.getTo() != null)
+            return false;
+        if (getClientKey() != null ? !getClientKey().equals(request.getClientKey()) : request.getClientKey() != null)
+            return false;
+        if (getDriverKey() != null ? !getDriverKey().equals(request.getDriverKey()) : request.getDriverKey() != null)
+            return false;
+        return getRouteKey() != null ? getRouteKey().equals(request.getRouteKey()) : request.getRouteKey() == null;
+    }
+
 }
